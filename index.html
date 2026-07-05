@@ -26,6 +26,7 @@
     background:var(--bg);
     color:var(--ink);
     padding-bottom:60px;
+    overflow-x:hidden;
   }
   header{
     background:linear-gradient(135deg,#7c5cff,#5b3fd6);
@@ -386,8 +387,8 @@
     align-items:center;
     margin-bottom:6px;
   }
-  .exercise-row input.ex-name{flex:1.4;}
-  .exercise-row input.ex-detail{flex:1;}
+  .exercise-row input.ex-name{flex:1.4; min-width:0;}
+  .exercise-row input.ex-detail{flex:1; min-width:0;}
   .exercise-row input{
     border:1px solid var(--line);
     background:var(--bg);
@@ -395,6 +396,8 @@
     padding:7px 9px;
     font-size:12.5px;
     font-family:inherit;
+    box-sizing:border-box;
+    width:100%;
   }
 
   /* Reading */
@@ -450,7 +453,7 @@
     font-family:inherit;
   }
   .log-form input.pages-input{width:70px;}
-  .log-form input.note-input{flex:1;}
+  .log-form input.note-input{flex:1; min-width:0;}
   .log-form button{
     background:var(--accent);
     color:white;
@@ -559,6 +562,7 @@
   .grocery-add-row{display:flex;gap:8px;margin-top:10px;}
   .grocery-add-row input{
     flex:1;
+    min-width:0;
     border:1px solid var(--line);
     border-radius:8px;
     padding:8px 10px;
@@ -641,7 +645,7 @@
     font-family:inherit;
   }
   .pm-numbers{display:flex;gap:6px;margin-bottom:6px;}
-  .pm-numbers .pm-field{flex:1;}
+  .pm-numbers .pm-field{flex:1; min-width:0;}
   .pm-numbers label{font-size:9.5px;color:var(--sub);display:block;margin-bottom:2px;}
   .pm-numbers input{
     width:100%;
@@ -752,7 +756,7 @@
     font-family:inherit;
   }
   .create-form .cf-row{display:flex;gap:8px;}
-  .create-form .cf-row > div{flex:1;}
+  .create-form .cf-row > div{flex:1; min-width:0;}
   .create-form .tag-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
   .create-form button.save-btn{
     width:100%;
