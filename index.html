@@ -4,19 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>75 Medium</title>
-
-<!-- Installability: iPhone home screen + desktop browsers (Chrome/Edge "Install app") -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7c5cff">
-
-<!-- iOS-specific: makes "Add to Home Screen" open full-screen with no browser chrome -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="75 Medium">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-
-<!-- Favicon for browser tabs / desktop bookmarks -->
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   :root{
     --ink:#1a1a2e;
@@ -376,7 +363,6 @@
   }
 
   /* Workouts */
-  .workout-plan{margin-bottom:18px;}
   .workout-plan h3{
     font-size:14.5px;
     margin:0 0 10px;
@@ -1098,8 +1084,8 @@
       <h2>Workout Plans</h2>
       <div class="note">Pick whichever plan fits the day. Every exercise field is editable — tap in and type. Add exercises or whole new plans as you go.</div>
     </div>
-    <div class="card" id="workoutsCard">
-      <!-- rendered by JS -->
+    <div id="workoutsCard">
+      <!-- rendered by JS: each plan gets its own .card -->
     </div>
     <button class="add-btn" id="addPlanBtn" style="margin-bottom:16px;">+ Add workout plan</button>
 
@@ -1416,64 +1402,74 @@
   }
 
   let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  if(!data.startDate){ data.startDate = todayLocalDateString(); }
-  if(!data.days){ data.days = {}; }
-  if(!data.currentDay){ data.currentDay = 1; }
-  if(!data.workouts){ data.workouts = JSON.parse(JSON.stringify(defaultWorkouts)); }
-  if(!data.book){ data.book = {title:'', author:'', currentPage:'', totalPage:''}; }
-  if(!data.readingLog){ data.readingLog = []; }
-  if(!data.grocery){ data.grocery = {checkedItems:{}, customItems:[]}; }
-  if(typeof data.lastKnownStreak !== 'number'){ data.lastKnownStreak = 0; }
-  if(typeof data.lastEvaluatedDay !== 'number'){ data.lastEvaluatedDay = 0; }
-  if(!data.friendProfile){ data.friendProfile = null; } // {name, pin}
-  if(typeof data.sharedPhotoDay === 'undefined'){ data.sharedPhotoDay = null; }
 
-  // Meal library + plan setup (with migration from the old free-text meals format)
-  if(!data.mealLibrary || !data.mealPlan){
-    data.mealLibrary = JSON.parse(JSON.stringify(presetSeedLibrary));
-    data.mealPlan = {breakfast:[], lunch:[], dinner:[], snack:[]};
+  function ensureDataDefaults(){
+    if(!data.startDate){ data.startDate = todayLocalDateString(); }
+    if(!data.days){ data.days = {}; }
+    if(!data.currentDay){ data.currentDay = 1; }
+    if(!data.workouts){ data.workouts = JSON.parse(JSON.stringify(defaultWorkouts)); }
+    if(!data.book){ data.book = {title:'', author:'', currentPage:'', totalPage:''}; }
+    if(!data.readingLog){ data.readingLog = []; }
+    if(!data.grocery){ data.grocery = {checkedItems:{}, customItems:[]}; }
+    if(typeof data.lastKnownStreak !== 'number'){ data.lastKnownStreak = 0; }
+    if(typeof data.lastEvaluatedDay !== 'number'){ data.lastEvaluatedDay = 0; }
+    if(!data.friendProfile){ data.friendProfile = null; } // {name, pin} — device credential, never synced as content
+    if(typeof data.lastConnectedAccountName === 'undefined'){ data.lastConnectedAccountName = null; }
+    if(typeof data.sharedPhotoDay === 'undefined'){ data.sharedPhotoDay = null; }
+    if(!data.pastAttempts){ data.pastAttempts = []; }
 
-    if(data.meals){
-      // old shape: data.meals = { breakfast:[{name,macros}], lunch:[...], dinner:[...], snacks:[...] }
-      const catMap = {breakfast:'breakfast', lunch:'lunch', dinner:'dinner', snacks:'snack'};
-      Object.keys(data.meals).forEach(oldCat=>{
-        const newCat = catMap[oldCat] || oldCat;
-        (data.meals[oldCat] || []).forEach((item, i)=>{
-          const macros = (item.macros || '').trim();
-          let ingredients = '';
-          if(macros.includes('—')){
-            const before = macros.split('—')[0].trim();
-            if(before && (before.includes(',') || /\d/.test(before))) ingredients = before;
-          }
-          if(!ingredients) ingredients = item.name || '';
-          const newItem = {
-            id: 'migrated_'+newCat+'_'+i+'_'+Date.now(),
-            name: item.name || 'Untitled meal',
-            calories: 0,
-            protein: 0,
-            fiber: 0,
-            ingredients: ingredients,
-            mealType: newCat,
-            dietTags: [],
-            isCustom: true
-          };
-          data.mealLibrary.push(newItem);
-          if(!data.mealPlan[newCat]) data.mealPlan[newCat] = [];
-          data.mealPlan[newCat].push(newItem.id);
+    // Meal library + plan setup (with migration from the old free-text meals format)
+    if(!data.mealLibrary || !data.mealPlan){
+      data.mealLibrary = JSON.parse(JSON.stringify(presetSeedLibrary));
+      data.mealPlan = {breakfast:[], lunch:[], dinner:[], snack:[]};
+
+      if(data.meals){
+        // old shape: data.meals = { breakfast:[{name,macros}], lunch:[...], dinner:[...], snacks:[...] }
+        const catMap = {breakfast:'breakfast', lunch:'lunch', dinner:'dinner', snacks:'snack'};
+        Object.keys(data.meals).forEach(oldCat=>{
+          const newCat = catMap[oldCat] || oldCat;
+          (data.meals[oldCat] || []).forEach((item, i)=>{
+            const macros = (item.macros || '').trim();
+            let ingredients = '';
+            if(macros.includes('—')){
+              const before = macros.split('—')[0].trim();
+              if(before && (before.includes(',') || /\d/.test(before))) ingredients = before;
+            }
+            if(!ingredients) ingredients = item.name || '';
+            const newItem = {
+              id: 'migrated_'+newCat+'_'+i+'_'+Date.now(),
+              name: item.name || 'Untitled meal',
+              calories: 0,
+              protein: 0,
+              fiber: 0,
+              ingredients: ingredients,
+              mealType: newCat,
+              dietTags: [],
+              isCustom: true
+            };
+            data.mealLibrary.push(newItem);
+            if(!data.mealPlan[newCat]) data.mealPlan[newCat] = [];
+            data.mealPlan[newCat].push(newItem.id);
+          });
         });
-      });
-      delete data.meals;
-    } else {
-      // fresh install — seed a starter plan from the presets
-      const findId = name => (data.mealLibrary.find(m=>m.name===name) || {}).id;
-      data.mealPlan.breakfast = [findId('Greek yogurt + berries + chia'), findId('Turkey sausage breakfast sandwich'), findId('Overnight oats with protein')].filter(Boolean);
-      data.mealPlan.lunch = [findId('Chicken thigh rice bowl'), findId('Tuna rice bowl'), findId('Ground beef + Sola wrap')].filter(Boolean);
-      data.mealPlan.dinner = [findId('Baked chicken thighs + rice + veg'), findId('Ground beef stir-fry'), findId('Egg + turkey sausage skillet')].filter(Boolean);
-      data.mealPlan.snack = [findId('String cheese + banana'), findId('Greek yogurt (small) + berries'), findId('Boiled egg + cucumber slices'), findId('Dark chocolate (85%+), 2 squares')].filter(Boolean);
+        delete data.meals;
+      } else {
+        // fresh install — seed a starter plan from the presets
+        const findId = name => (data.mealLibrary.find(m=>m.name===name) || {}).id;
+        data.mealPlan.breakfast = [findId('Greek yogurt + berries + chia'), findId('Turkey sausage breakfast sandwich'), findId('Overnight oats with protein')].filter(Boolean);
+        data.mealPlan.lunch = [findId('Chicken thigh rice bowl'), findId('Tuna rice bowl'), findId('Ground beef + Sola wrap')].filter(Boolean);
+        data.mealPlan.dinner = [findId('Baked chicken thighs + rice + veg'), findId('Ground beef stir-fry'), findId('Egg + turkey sausage skillet')].filter(Boolean);
+        data.mealPlan.snack = [findId('String cheese + banana'), findId('Greek yogurt (small) + berries'), findId('Boiled egg + cucumber slices'), findId('Dark chocolate (85%+), 2 squares')].filter(Boolean);
+      }
     }
   }
 
-  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  ensureDataDefaults();
+
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    schedulePublish();
+  }
   function getLibraryItem(id){ return data.mealLibrary.find(m=>m.id === id); }
 
   function backfillMissingNumbers(){
@@ -2236,11 +2232,11 @@
 
   // ---------- WORKOUTS ----------
   function renderWorkouts(){
-    const card = document.getElementById('workoutsCard');
-    card.innerHTML = '';
+    const container = document.getElementById('workoutsCard');
+    container.innerHTML = '';
     data.workouts.forEach((plan, pIdx)=>{
-      const block = document.createElement('div');
-      block.className = 'workout-plan';
+      const card = document.createElement('div');
+      card.className = 'card workout-plan';
 
       const h3 = document.createElement('h3');
       const titleInput = document.createElement('input');
@@ -2263,7 +2259,7 @@
       });
       h3.appendChild(titleInput);
       h3.appendChild(delPlanBtn);
-      block.appendChild(h3);
+      card.appendChild(h3);
 
       plan.exercises.forEach((ex, eIdx)=>{
         const row = document.createElement('div');
@@ -2297,7 +2293,7 @@
         row.appendChild(nameInput);
         row.appendChild(detailInput);
         row.appendChild(delBtn);
-        block.appendChild(row);
+        card.appendChild(row);
       });
 
       const addExBtn = document.createElement('button');
@@ -2308,9 +2304,9 @@
         save();
         renderWorkouts();
       });
-      block.appendChild(addExBtn);
+      card.appendChild(addExBtn);
 
-      card.appendChild(block);
+      container.appendChild(card);
     });
   }
 
@@ -2636,7 +2632,7 @@
     }
   }
 
-  document.getElementById('friendSaveProfileBtn').addEventListener('click', ()=>{
+  document.getElementById('friendSaveProfileBtn').addEventListener('click', async ()=>{
     const name = document.getElementById('friendNameInput').value.trim();
     const pin = document.getElementById('friendPinInput').value.trim();
     const statusEl = document.getElementById('friendProfileStatus');
@@ -2645,11 +2641,97 @@
       statusEl.className = 'error';
       return;
     }
-    data.friendProfile = { name, pin };
-    save();
-    renderFriendProfileUI();
-    statusEl.textContent = '';
-    publishFriendData();
+    if(!supabaseClient){
+      statusEl.textContent = 'Could not connect — check your internet connection and try again.';
+      statusEl.className = 'error';
+      return;
+    }
+
+    statusEl.textContent = 'Connecting…';
+    statusEl.className = '';
+
+    // Tracks who was last connected on this device, persisted separately from
+    // friendProfile — needed because "Switch name" clears friendProfile before
+    // this handler ever runs, so we can't rely on data.friendProfile here.
+    const isSwitchingAccounts = !!(data.lastConnectedAccountName && data.lastConnectedAccountName !== name);
+
+    try{
+      const { data: rows, error } = await supabaseClient.rpc('verify_and_fetch_friend', { p_name: name, p_pin: pin });
+      if(error) throw error;
+      const existing = rows && rows[0];
+
+      if(existing && !existing.is_new && existing.full_data){
+        // Pull down this person's entire tracker — replaces whatever is currently
+        // on this device, since we're now acting as their account, not this device's.
+        const fetched = existing.full_data;
+        fetched.friendProfile = { name, pin };
+        fetched.lastConnectedAccountName = name;
+        data = fetched;
+        ensureDataDefaults();
+        backfillMissingNumbers();
+        save();
+        renderDay();
+        renderAllMealCategories();
+        renderGroceryList();
+        renderWorkouts();
+        renderReading();
+        renderFriendProfileUI();
+        statusEl.textContent = '';
+
+        const updatedStr = existing.updated_at
+          ? new Date(existing.updated_at).toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})
+          : 'a while ago';
+        setSyncStatus('ok', 'Synced — last updated ' + updatedStr);
+        showNotice(
+          'Welcome back, ' + name + '. Your full tracker (Day ' + data.currentDay + ', ' +
+          computeStreak() + ' day streak, ' + computeTotalDaysCompleted() + ' days completed) has been restored on this device. ' +
+          'Private photos from other devices won\'t appear here — only your shared photo (if any) carries over.',
+          'Tracker restored'
+        );
+      } else {
+        // No cloud tracker to restore (brand new name, or this account never synced
+        // full data before). If we're switching away from a DIFFERENT account, the
+        // current local state belongs to that other account and must not carry over —
+        // start this one clean. If this device never had any account, keep its
+        // existing local data as the natural starting point.
+        if(isSwitchingAccounts){
+          data = {};
+          ensureDataDefaults();
+        }
+        data.friendProfile = { name, pin };
+        data.lastConnectedAccountName = name;
+        save();
+        renderDay();
+        renderAllMealCategories();
+        renderGroceryList();
+        renderWorkouts();
+        renderReading();
+        renderFriendProfileUI();
+        statusEl.textContent = '';
+
+        if(existing && !existing.is_new){
+          const updatedStr = existing.updated_at
+            ? new Date(existing.updated_at).toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})
+            : 'a while ago';
+          setSyncStatus('pending', 'Publishing this device\'s tracker as your account…');
+          showNotice(
+            'Welcome back, ' + name + '. This account had a summary (last synced ' + updatedStr + ') but no full tracker yet, so ' +
+            (isSwitchingAccounts ? 'you\'re starting fresh at Day 1 for this account.' : 'this device\'s existing tracker becomes your account\'s data going forward.'),
+            'Reconnected'
+          );
+        } else {
+          setSyncStatus('pending', 'New profile — publishing your progress…');
+          if(isSwitchingAccounts){
+            showNotice('Switched to ' + name + ' — starting fresh at Day 1 for this account.', 'New profile');
+          }
+        }
+      }
+      schedulePublish();
+    } catch(err){
+      const detail = (err && (err.message || err.error_description)) || 'Could not connect.';
+      statusEl.textContent = detail;
+      statusEl.className = 'error';
+    }
   });
 
   document.getElementById('friendSwitchProfileBtn').addEventListener('click', ()=>{
@@ -2658,6 +2740,9 @@
       ()=>{
         data.friendProfile = null;
         save();
+        document.getElementById('friendNameInput').value = '';
+        document.getElementById('friendPinInput').value = '';
+        document.getElementById('friendProfileStatus').textContent = '';
         renderFriendProfileUI();
       },
       'Switch profile?'
@@ -2670,6 +2755,19 @@
     setSyncStatus('pending', 'Syncing…');
     clearTimeout(publishDebounceTimer);
     publishDebounceTimer = setTimeout(publishFriendData, 2500);
+  }
+
+  // Everything except device-specific credentials and photo bytes (photos stay
+  // local per-device — only the one explicitly "shared" photo travels separately).
+  function buildSyncableData(){
+    const clone = JSON.parse(JSON.stringify(data));
+    delete clone.friendProfile;
+    if(clone.days){
+      Object.keys(clone.days).forEach(k=>{
+        if(clone.days[k]) clone.days[k].photo = null;
+      });
+    }
+    return clone;
   }
 
   async function publishFriendData(){
@@ -2696,7 +2794,8 @@
         p_workout_done_today: !!todayChecks.workout,
         p_water_done_today: !!todayChecks.water,
         p_shared_photo_data: sharedPhotoData,
-        p_shared_photo_day: sharedPhotoDayVal
+        p_shared_photo_day: sharedPhotoDayVal,
+        p_full_data: buildSyncableData()
       });
       if(error) throw error;
       setSyncStatus('ok', 'Synced just now');
