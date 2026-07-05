@@ -1,0 +1,2783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>75 Medium</title>
+
+<!-- Installability: iPhone home screen + desktop browsers (Chrome/Edge "Install app") -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c5cff">
+
+<!-- iOS-specific: makes "Add to Home Screen" open full-screen with no browser chrome -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="75 Medium">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- Favicon for browser tabs / desktop bookmarks -->
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  :root{
+    --ink:#1a1a2e;
+    --sub:#6b7280;
+    --line:#e5e7eb;
+    --accent:#7c5cff;
+    --accent-soft:#f0edff;
+    --green:#1f9d55;
+    --green-soft:#e8f8ee;
+    --amber:#b8860b;
+    --amber-soft:#fdf6e3;
+    --red:#d33;
+    --card:#ffffff;
+    --bg:#f7f7fb;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding-bottom:60px;
+  }
+  header{
+    background:linear-gradient(135deg,#7c5cff,#5b3fd6);
+    color:white;
+    padding:28px 20px 22px;
+    text-align:center;
+  }
+  header h1{margin:0 0 4px;font-size:26px;letter-spacing:-0.5px;}
+  header p{margin:0;opacity:0.9;font-size:14px;}
+  .stats-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    background:rgba(255,255,255,0.15);
+    border-radius:12px;
+    padding:10px 16px;
+    min-width:74px;
+  }
+  .stat .val{font-size:20px;font-weight:700;}
+  .stat .lbl{font-size:11px;opacity:0.85;}
+  .container{max-width:720px;margin:0 auto;padding:18px 16px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .card h2{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color:var(--sub);
+    margin:0 0 12px;
+  }
+  .rules{list-style:none;margin:0;padding:0;}
+  .rules li{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14.5px;
+  }
+  .rules li:last-child{border-bottom:none;}
+  .rules li .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent);margin-top:6px;flex-shrink:0;
+  }
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:14px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
+  }
+  .tab{
+    flex:0 0 auto;
+    text-align:center;
+    padding:9px 13px;
+    border-radius:10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--sub);
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+  .tab.active{background:var(--accent);color:white;border-color:var(--accent);}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* Tracker */
+  .day-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .day-header .big{font-size:22px;font-weight:700;}
+  .day-header .sub{font-size:12.5px;color:var(--sub);}
+  .navbtns{display:flex;gap:8px;}
+  .navbtns button{
+    border:1px solid var(--line);
+    background:white;
+    border-radius:8px;
+    width:34px;height:34px;
+    font-size:16px;
+    cursor:pointer;
+  }
+  .checklist{list-style:none;margin:14px 0 0;padding:0;}
+  .checklist li{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:11px 4px;
+    border-bottom:1px solid var(--line);
+    font-size:14.5px;
+  }
+  .checklist li:last-child{border-bottom:none;}
+  .checklist input[type=checkbox]{
+    width:20px;height:20px;
+    accent-color:var(--accent);
+    flex-shrink:0;
+  }
+  .checklist label{flex:1;}
+  .checklist .optional-tag{
+    font-size:10.5px;
+    color:var(--sub);
+    background:var(--bg);
+    padding:2px 6px;
+    border-radius:6px;
+  }
+  .water-tracker{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+    flex-wrap:wrap;
+  }
+  .water-cup{
+    width:30px;height:30px;
+    border-radius:8px;
+    border:1.5px solid var(--accent);
+    background:white;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;
+  }
+  .water-cup.filled{background:var(--accent);color:white;}
+  .note-box textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
+    font-family:inherit;
+    font-size:13.5px;
+    resize:vertical;
+    min-height:50px;
+  }
+  .grid75{
+    display:grid;
+    grid-template-columns:repeat(10,1fr);
+    gap:5px;
+  }
+  .cell{
+    aspect-ratio:1;
+    border-radius:6px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    display:flex;
+    align-items:center;justify-content:center;
+    font-size:10.5px;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .cell.done{background:var(--green);color:white;border-color:var(--green);}
+  .cell.partial{background:var(--amber-soft);border-color:var(--amber);color:var(--amber);}
+  .cell.today{outline:2px solid var(--accent);outline-offset:1px;}
+  .streak-banner{
+    background:var(--green-soft);
+    color:var(--green);
+    border-radius:10px;
+    padding:10px 14px;
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:14px;
+    text-align:center;
+  }
+
+  /* Meal plan */
+  .macro-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .macro{
+    flex:1;
+    min-width:70px;
+    background:var(--accent-soft);
+    border-radius:10px;
+    padding:10px;
+    text-align:center;
+  }
+  .macro .n{font-size:17px;font-weight:700;color:var(--accent);}
+  .macro .l{font-size:10.5px;color:var(--sub);}
+  .meal-block{margin-bottom:18px;}
+  .meal-block h3{
+    font-size:14px;
+    margin:0 0 8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .meal-block h3 .cals{
+    font-size:11.5px;
+    font-weight:500;
+    color:var(--sub);
+    background:var(--bg);
+    padding:2px 8px;
+    border-radius:6px;
+  }
+  .opt{
+    background:var(--bg);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .opt-row{display:flex;gap:6px;align-items:center;}
+  .opt input[type=text]{
+    border:1px solid var(--line);
+    background:white;
+    border-radius:7px;
+    padding:7px 9px;
+    font-size:13px;
+    font-family:inherit;
+    width:100%;
+  }
+  .opt input.oname-input{font-weight:600;margin-bottom:6px;}
+  .opt .del-btn{
+    flex-shrink:0;
+    width:28px;height:28px;
+    border-radius:7px;
+    border:1px solid var(--line);
+    background:white;
+    color:var(--red);
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+  }
+  .add-btn{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1.5px dashed var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .note{
+    font-size:12.5px;
+    color:var(--sub);
+    background:var(--amber-soft);
+    border-radius:8px;
+    padding:8px 10px;
+    margin-top:6px;
+  }
+  .swap-note{font-size:12px;color:var(--sub);font-style:italic;margin-top:2px;}
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--sub);
+    margin-top:20px;
+    padding:0 20px;
+  }
+
+  /* Photos */
+  .photo-upload-row{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .photo-upload-row label.upload-btn{
+    flex:1;
+    text-align:center;
+    padding:12px;
+    border-radius:10px;
+    background:var(--accent);
+    color:white;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .photo-gallery{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  .photo-thumb{
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+    aspect-ratio:3/4;
+    background:var(--bg);
+    border:1px solid var(--line);
+    cursor:pointer;
+  }
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-thumb .plabel{
+    position:absolute;bottom:0;left:0;right:0;
+    background:rgba(0,0,0,0.55);
+    color:white;
+    font-size:10px;
+    text-align:center;
+    padding:3px 0;
+  }
+  .photo-empty{
+    text-align:center;
+    color:var(--sub);
+    font-size:13px;
+    padding:30px 10px;
+  }
+  .lightbox{
+    display:none;
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.85);
+    z-index:999;
+    align-items:center;justify-content:center;
+    flex-direction:column;
+    padding:20px;
+  }
+  .lightbox.active{display:flex;}
+  .lightbox img{max-width:100%;max-height:75vh;border-radius:10px;}
+  .lightbox .lb-label{color:white;margin-top:12px;font-size:14px;}
+  .lightbox .lb-close{
+    position:absolute;top:18px;right:18px;
+    color:white;font-size:26px;
+    background:none;border:none;cursor:pointer;
+  }
+  .lightbox .lb-del{
+    margin-top:14px;
+    background:var(--red);
+    color:white;
+    border:none;
+    padding:8px 16px;
+    border-radius:8px;
+    font-size:12.5px;
+    cursor:pointer;
+  }
+
+  /* Workouts */
+  .workout-plan{margin-bottom:18px;}
+  .workout-plan h3{
+    font-size:14.5px;
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .workout-plan input.plan-title{
+    font-size:14.5px;
+    font-weight:700;
+    border:none;
+    background:transparent;
+    flex:1;
+    font-family:inherit;
+    color:var(--ink);
+    padding:2px 0;
+  }
+  .exercise-row{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .exercise-row input.ex-name{flex:1.4;}
+  .exercise-row input.ex-detail{flex:1;}
+  .exercise-row input{
+    border:1px solid var(--line);
+    background:var(--bg);
+    border-radius:7px;
+    padding:7px 9px;
+    font-size:12.5px;
+    font-family:inherit;
+  }
+
+  /* Reading */
+  .book-card{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+  }
+  .book-fields{flex:1;}
+  .book-fields input, .book-fields textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13.5px;
+    font-family:inherit;
+    margin-bottom:8px;
+  }
+  .field-label{font-size:11px;color:var(--sub);margin-bottom:3px;display:block;}
+  .progress-bar-outer{
+    background:var(--bg);
+    border-radius:20px;
+    height:10px;
+    overflow:hidden;
+    margin:4px 0 4px;
+  }
+  .progress-bar-inner{
+    background:var(--accent);
+    height:100%;
+    border-radius:20px;
+    transition:width 0.3s;
+  }
+  .log-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+    font-size:13px;
+  }
+  .log-row:last-child{border-bottom:none;}
+  .log-row .ld{color:var(--sub);font-size:11.5px;}
+  .log-form{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .log-form input{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .log-form input.pages-input{width:70px;}
+  .log-form input.note-input{flex:1;}
+  .log-form button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  /* Modal picker (workout plan library) */
+  .modal-overlay{
+    display:none;
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.5);
+    z-index:998;
+    align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.active{display:flex;}
+  /* Confirm/notice modal can be triggered from inside other modals (e.g. deleting a photo
+     from the lightbox), so it needs to sit above everything else, including the lightbox. */
+  #confirmOverlay{ z-index:1100; }
+  .modal-box{
+    background:white;
+    border-radius:16px;
+    padding:18px;
+    max-width:420px;
+    width:100%;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  .modal-box h3{margin:0 0 12px;font-size:16px;}
+  .preset-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:8px;
+  }
+  .preset-item .pname{font-size:13.5px;font-weight:600;}
+  .preset-item .pcount{font-size:11px;color:var(--sub);}
+  .preset-item button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    border-radius:7px;
+    padding:6px 12px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .preset-item.custom-item button{background:var(--ink);}
+  .modal-cancel{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:white;
+    color:var(--sub);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+    margin-top:6px;
+  }
+
+  /* Action buttons row (print / grocery) */
+  .action-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .action-btn{
+    flex:1;
+    min-width:140px;
+    text-align:center;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid var(--accent);
+    background:white;
+    color:var(--accent);
+    font-weight:600;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .action-btn.solid{background:var(--accent);color:white;}
+
+  /* Grocery list */
+  .grocery-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 2px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+  }
+  .grocery-item:last-child{border-bottom:none;}
+  .grocery-item input[type=checkbox]{
+    width:18px;height:18px;
+    accent-color:var(--accent);
+    flex-shrink:0;
+  }
+  .grocery-item span{flex:1;}
+  .grocery-item.checked span{text-decoration:line-through;color:var(--sub);}
+  .grocery-item .del-btn{width:24px;height:24px;font-size:12px;}
+  .grocery-add-row{display:flex;gap:8px;margin-top:10px;}
+  .grocery-add-row input{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .grocery-add-row button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  /* Nutrition overview */
+  .nutri-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .nutri-stat{
+    flex:1;min-width:100px;
+    background:var(--accent-soft);
+    border-radius:10px;
+    padding:10px;
+    text-align:center;
+  }
+  .nutri-stat .n{font-size:16px;font-weight:700;color:var(--accent);}
+  .nutri-stat .l{font-size:10.5px;color:var(--sub);}
+  .nutri-compare{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px 12px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .nutri-compare.good{background:var(--green-soft);color:var(--green);}
+  .nutri-compare.off{background:var(--amber-soft);color:var(--amber);}
+  .missing-banner{
+    background:var(--amber-soft);
+    color:var(--amber);
+    border-radius:10px;
+    padding:9px 12px;
+    font-size:12.5px;
+    font-weight:600;
+    margin-bottom:10px;
+  }
+
+  /* Meal category cards */
+  .meal-cat-card h3{
+    font-size:14.5px;
+    margin:0 0 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .meal-cat-card h3 .cnt{font-size:11px;color:var(--sub);font-weight:500;}
+  .placed-meal{
+    background:var(--bg);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .placed-meal-top{
+    display:flex;
+    gap:6px;
+    align-items:center;
+    margin-bottom:6px;
+  }
+  .placed-meal-top input.pm-name{
+    flex:1;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:white;
+    border-radius:7px;
+    padding:7px 9px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .pm-numbers{display:flex;gap:6px;margin-bottom:6px;}
+  .pm-numbers .pm-field{flex:1;}
+  .pm-numbers label{font-size:9.5px;color:var(--sub);display:block;margin-bottom:2px;}
+  .pm-numbers input{
+    width:100%;
+    border:1px solid var(--line);
+    background:white;
+    border-radius:7px;
+    padding:6px 7px;
+    font-size:12.5px;
+    font-family:inherit;
+  }
+  .pm-ingredients{
+    width:100%;
+    border:1px solid var(--line);
+    background:white;
+    border-radius:7px;
+    padding:7px 9px;
+    font-size:12.5px;
+    font-family:inherit;
+    margin-bottom:6px;
+  }
+  .pm-tags{display:flex;gap:5px;flex-wrap:wrap;}
+  .diet-tag{
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    background:white;
+    color:var(--sub);
+    cursor:pointer;
+    user-select:none;
+  }
+  .diet-tag.active{background:var(--accent);color:white;border-color:var(--accent);}
+  .badge-preset{
+    font-size:9px;
+    padding:2px 7px;
+    border-radius:10px;
+    background:var(--ink);
+    color:white;
+    flex-shrink:0;
+  }
+  .badge-missing{
+    font-size:9px;
+    padding:2px 7px;
+    border-radius:10px;
+    background:var(--red);
+    color:white;
+    flex-shrink:0;
+  }
+
+  /* Add-meal modal */
+  .modal-tabs{display:flex;gap:6px;margin-bottom:12px;}
+  .modal-tab{
+    flex:1;
+    text-align:center;
+    padding:8px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:white;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .modal-tab.active{background:var(--accent);color:white;border-color:var(--accent);}
+  .modal-subview{display:none;}
+  .modal-subview.active{display:block;}
+  .lib-search{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+    margin-bottom:8px;
+  }
+  .lib-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .lib-result{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    margin-bottom:6px;
+    gap:8px;
+  }
+  .lib-result .lname{font-size:13px;font-weight:600;}
+  .lib-result .lnums{font-size:11px;color:var(--sub);}
+  .lib-result button{
+    background:var(--accent);
+    color:white;
+    border:none;
+    border-radius:7px;
+    padding:6px 12px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .lib-result button:disabled{background:var(--sub);cursor:default;}
+  .create-form label{font-size:11px;color:var(--sub);display:block;margin:8px 0 3px;}
+  .create-form input{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .create-form .cf-row{display:flex;gap:8px;}
+  .create-form .cf-row > div{flex:1;}
+  .create-form .tag-picker{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+  .create-form button.save-btn{
+    width:100%;
+    margin-top:14px;
+    background:var(--accent);
+    color:white;
+    border:none;
+    border-radius:9px;
+    padding:11px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  /* Import from Claude */
+  .import-textarea{
+    width:100%;
+    min-height:90px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:12px;
+    resize:vertical;
+  }
+  #importStatus{
+    font-size:12.5px;
+    font-weight:600;
+    margin-top:8px;
+  }
+  #importStatus.success{color:var(--green);}
+  #importStatus.error{color:var(--red);}
+
+  /* Friends feed */
+  .friend-card{
+    background:var(--bg);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .friend-card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
+  .friend-card-name{font-weight:700;font-size:14.5px;}
+  .friend-card-updated{font-size:10.5px;color:var(--sub);}
+  .friend-stat-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .friend-stat-pill{
+    background:white;
+    border-radius:8px;
+    padding:6px 10px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .friend-stat-pill .fn{font-weight:700;color:var(--accent);}
+  .friend-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+  .friend-badge{
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    background:var(--green-soft);
+    color:var(--green);
+    font-weight:600;
+  }
+  .friend-badge.pending{background:var(--bg);color:var(--sub);border:1px solid var(--line);}
+  .friend-book{font-size:12.5px;color:var(--sub);margin-bottom:8px;}
+  .friend-photo{
+    width:100%;
+    max-width:220px;
+    border-radius:10px;
+    display:block;
+  }
+  .sync-dot{
+    display:inline-block;
+    width:7px;height:7px;
+    border-radius:50%;
+    margin-right:5px;
+  }
+  .sync-dot.ok{background:var(--green);}
+  .sync-dot.pending{background:var(--amber);}
+  .sync-dot.error{background:var(--red);}
+
+  /* Print styles */
+  @media print{
+    body{padding-bottom:0;background:white;}
+    header .stats-row, .tabs, .action-row, .add-btn, .del-btn,
+    .photo-upload-row, .footer-note, .modal-overlay, .lightbox,
+    #view-tracker, #view-photos, #view-workouts, #view-reading, #view-friends, #view-rules,
+    .grocery-add-row{
+      display:none !important;
+    }
+    header p{display:none;}
+    #view-meals{display:block !important;}
+    .card{border:none;box-shadow:none;padding:6px 0;margin-bottom:10px;}
+    .placed-meal{background:none;border:1px solid #ddd;break-inside:avoid;}
+    .placed-meal input, .pm-ingredients{
+      border:none;background:none;padding:2px 0;
+      -webkit-appearance:none;
+    }
+    input.pm-name{font-weight:700 !important;}
+    .grocery-item{break-inside:avoid;}
+  }
+</style>
+<!-- Client-side HEIC/HEIF -> JPEG decoder (runs entirely in-browser, nothing uploaded anywhere).
+     Used as a fallback when a photo can't be decoded normally — common with iPhone photos
+     since no browser, including Safari, can decode HEIC natively in <img>/canvas. -->
+<script src="https://cdn.jsdelivr.net/npm/heic-to@1.5.2/dist/iife/heic-to.js"></script>
+<!-- Supabase client — powers the Friends tab's shared, PIN-protected feed. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header>
+  <h1>75 Medium</h1>
+  <p>Sustainable structure over brute force — built around your existing framework</p>
+  <div class="stats-row">
+    <div class="stat"><div class="val" id="dayCounter">1</div><div class="lbl">of 75</div></div>
+    <div class="stat"><div class="val" id="streakCounter">0</div><div class="lbl">day streak</div></div>
+    <div class="stat"><div class="val">1,600</div><div class="lbl">cal/day</div></div>
+    <div class="stat"><div class="val">~150g</div><div class="lbl">protein</div></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab active" data-tab="tracker">Tracker</div>
+    <div class="tab" data-tab="photos">Photos</div>
+    <div class="tab" data-tab="meals">Meal Plan</div>
+    <div class="tab" data-tab="workouts">Workouts</div>
+    <div class="tab" data-tab="reading">Reading</div>
+    <div class="tab" data-tab="friends">Friends</div>
+    <div class="tab" data-tab="rules">Rules</div>
+  </div>
+
+  <!-- TRACKER VIEW -->
+  <div class="view active" id="view-tracker">
+
+    <div class="card">
+      <div class="day-header">
+        <div>
+          <div class="big" id="dayLabel">Day 1</div>
+          <div class="sub" id="dateLabel"></div>
+        </div>
+        <div class="navbtns">
+          <button id="prevDay">‹</button>
+          <button id="nextDay">›</button>
+        </div>
+      </div>
+
+      <ul class="checklist" id="checklistItems">
+        <li>
+          <input type="checkbox" id="c1" data-key="workout">
+          <label for="c1">45 min strength + 15 min cardio <span class="swap-note">— OR hit 10K steps</span></label>
+        </li>
+        <li>
+          <input type="checkbox" id="c2" data-key="water">
+          <label for="c2">1.5L water</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c3" data-key="diet">
+          <label for="c3">Followed diet — 1,600 cal, high protein/fiber</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c4" data-key="noalcohol">
+          <label for="c4">No alcohol</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c5" data-key="reading">
+          <label for="c5">Read 10 pages</label>
+        </li>
+        <li>
+          <input type="checkbox" id="c6" data-key="progresspic">
+          <label for="c6">Progress picture</label>
+          <span class="optional-tag">optional</span>
+        </li>
+      </ul>
+
+      <div style="margin-top:14px;">
+        <div class="sub" style="font-size:12.5px;margin-bottom:6px;">Water — tap to fill (6 x 250ml ≈ 1.5L)</div>
+        <div class="water-tracker" id="waterCups"></div>
+      </div>
+
+      <div class="note-box" style="margin-top:14px;">
+        <div class="sub" style="font-size:12.5px;margin-bottom:6px;">Notes</div>
+        <textarea id="dayNote" placeholder="Energy, hunger, cravings, wins..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>75-Day Grid</h2>
+      <div class="streak-banner" id="streakBanner">Let's start Day 1 💪</div>
+      <div class="grid75" id="grid75"></div>
+    </div>
+
+  </div>
+
+  <!-- PHOTOS VIEW -->
+  <div class="view" id="view-photos">
+    <div class="card">
+      <h2>Progress Photo — Day <span id="photoDayNum">1</span></h2>
+      <div class="photo-upload-row">
+        <label class="upload-btn" for="photoInput">📷 Add / replace today's photo</label>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;">
+      </div>
+      <div id="photoProcessingStatus" style="font-size:12px;color:var(--sub);min-height:16px;margin-top:2px;"></div>
+      <div class="note">Photos are compressed and stored on this device only (not uploaded anywhere). Taking it the same time, lighting, and pose each morning makes the timeline more useful.</div>
+    </div>
+
+    <div class="card">
+      <h2>Timeline</h2>
+      <div class="photo-gallery" id="photoGallery"></div>
+      <div class="photo-empty" id="photoEmptyMsg" style="display:none;">No photos yet — add your first one above.</div>
+    </div>
+  </div>
+
+  <!-- MEAL PLAN VIEW -->
+  <div class="view" id="view-meals">
+
+    <div class="card">
+      <h2>Daily Targets</h2>
+      <div class="macro-row">
+        <div class="macro"><div class="n">1,600</div><div class="l">calories</div></div>
+        <div class="macro"><div class="n">145-155g</div><div class="l">protein</div></div>
+        <div class="macro"><div class="n">30g+</div><div class="l">fiber</div></div>
+        <div class="macro"><div class="n">~120g</div><div class="l">carbs</div></div>
+      </div>
+      <div class="note">Pick meals from your library into each category below, or create new ones. Every meal you save sticks around in the library for reuse.</div>
+      <div class="action-row">
+        <button class="action-btn solid" id="printMealBtn">🖨️ Print meal plan + list</button>
+        <button class="action-btn" id="regenGroceryBtn">🔄 Rebuild grocery list</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Nutrition Overview</h2>
+      <div id="nutritionOverview"><!-- rendered by JS --></div>
+    </div>
+
+    <div class="card meal-cat-card">
+      <h3>Breakfast <span class="cnt" id="cnt-breakfast"></span></h3>
+      <div id="cat-breakfast"><!-- rendered by JS --></div>
+      <button class="add-btn" data-cat="breakfast">+ Add breakfast option</button>
+    </div>
+
+    <div class="card meal-cat-card">
+      <h3>Lunch <span class="cnt" id="cnt-lunch"></span></h3>
+      <div id="cat-lunch"><!-- rendered by JS --></div>
+      <button class="add-btn" data-cat="lunch">+ Add lunch option</button>
+    </div>
+
+    <div class="card meal-cat-card">
+      <h3>Dinner <span class="cnt" id="cnt-dinner"></span></h3>
+      <div id="cat-dinner"><!-- rendered by JS --></div>
+      <button class="add-btn" data-cat="dinner">+ Add dinner option</button>
+    </div>
+
+    <div class="card meal-cat-card">
+      <h3>Snacks <span class="cnt" id="cnt-snack"></span></h3>
+      <div id="cat-snack"><!-- rendered by JS --></div>
+      <button class="add-btn" data-cat="snack">+ Add snack option</button>
+    </div>
+
+    <div class="card">
+      <h2>Grocery List</h2>
+      <div class="note">Auto-built from the ingredients of every meal in your plan. Check things off as you shop, or add extras that aren't part of a specific meal.</div>
+      <div id="groceryList"></div>
+      <div class="grocery-add-row">
+        <input type="text" id="groceryAddInput" placeholder="Add an item...">
+        <button id="groceryAddBtn">Add</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Import From Claude</h2>
+      <div class="note">In a Claude chat, ask something like "build me a meal plan — I like ___, don't like ___, allergic to ___." Ask Claude to give you the meals as a JSON block (Claude knows this app's format). Paste that block below and hit Import. <strong>This replaces your current Breakfast/Lunch/Dinner/Snack plan</strong> — your saved meal library is untouched either way, so nothing is lost for good.</div>
+      <textarea class="import-textarea" id="importTextarea" placeholder='Paste the JSON block here, e.g.&#10;[{&quot;name&quot;:&quot;Chicken Rice Bowl&quot;,&quot;category&quot;:&quot;lunch&quot;,&quot;calories&quot;:420,&quot;protein&quot;:38,&quot;fiber&quot;:6,&quot;ingredients&quot;:&quot;chicken, rice, broccoli&quot;,&quot;tags&quot;:[&quot;meat&quot;]}]'></textarea>
+      <button class="action-btn solid" id="importMealsBtn" style="width:100%;margin-top:8px;">📥 Import Meals</button>
+      <div id="importStatus"></div>
+    </div>
+
+  </div>
+
+  <div class="modal-overlay" id="addMealOverlay">
+    <div class="modal-box">
+      <h3>Add to <span id="addMealCatLabel"></span></h3>
+      <div class="modal-tabs">
+        <div class="modal-tab active" data-subtab="browse">Browse Library</div>
+        <div class="modal-tab" data-subtab="create">Create New</div>
+      </div>
+
+      <div class="modal-subview active" id="subview-browse">
+        <input type="text" class="lib-search" id="librarySearch" placeholder="Search meals...">
+        <div class="lib-filters" id="libraryTagFilters"></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);margin-bottom:10px;">
+          <input type="checkbox" id="showAllTypes"> Show meals from other categories too
+        </label>
+        <div id="libraryResults"></div>
+      </div>
+
+      <div class="modal-subview" id="subview-create">
+        <div class="create-form">
+          <label>Name</label>
+          <input type="text" id="cfName" placeholder="Meal name">
+          <div class="cf-row">
+            <div><label>Calories</label><input type="text" id="cfCalories" inputmode="numeric" placeholder="0"></div>
+            <div><label>Protein (g)</label><input type="text" id="cfProtein" inputmode="numeric" placeholder="0"></div>
+            <div><label>Fiber (g)</label><input type="text" id="cfFiber" inputmode="numeric" placeholder="0"></div>
+          </div>
+          <label>Ingredients (comma-separated)</label>
+          <input type="text" id="cfIngredients" placeholder="e.g. 5oz chicken thigh, 2/3 cup rice, broccoli">
+          <label>Diet tags</label>
+          <div class="tag-picker" id="cfTagPicker"></div>
+          <button class="save-btn" id="cfSaveBtn">Save & Add to Plan</button>
+        </div>
+      </div>
+
+      <button class="modal-cancel" id="addMealCancel">Close</button>
+    </div>
+  </div>
+
+  <!-- WORKOUTS VIEW -->
+  <div class="view" id="view-workouts">
+    <div class="card">
+      <h2>Workout Plans</h2>
+      <div class="note">Pick whichever plan fits the day. Every exercise field is editable — tap in and type. Add exercises or whole new plans as you go.</div>
+    </div>
+    <div class="card" id="workoutsCard">
+      <!-- rendered by JS -->
+    </div>
+    <button class="add-btn" id="addPlanBtn" style="margin-bottom:16px;">+ Add workout plan</button>
+
+    <div class="card">
+      <h2>Import From Claude</h2>
+      <div class="note">In a Claude chat, ask something like "build me workout plans for ___ (goal/split/equipment)." Ask Claude to give you the plans as a JSON block. Paste that block below and hit Import. <strong>This replaces all your current workout plans</strong> — there's no separate library for workouts, so make sure you're ready to swap them out.</div>
+      <textarea class="import-textarea" id="workoutImportTextarea" placeholder='Paste the JSON block here, e.g.&#10;[{&quot;title&quot;:&quot;Push Day&quot;,&quot;exercises&quot;:[{&quot;name&quot;:&quot;Bench press&quot;,&quot;detail&quot;:&quot;3 x 10&quot;}]}]'></textarea>
+      <button class="action-btn solid" id="workoutImportBtn" style="width:100%;margin-top:8px;">📥 Import Workout Plans</button>
+      <div id="workoutImportStatus"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="planPickerOverlay">
+    <div class="modal-box">
+      <h3>Add a workout plan</h3>
+      <div id="planPickerList"></div>
+      <button class="modal-cancel" id="planPickerCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- READING VIEW -->
+  <div class="view" id="view-reading">
+    <div class="card">
+      <h2>Currently Reading</h2>
+      <div class="book-card">
+        <div class="book-fields">
+          <span class="field-label">Title</span>
+          <input type="text" id="bookTitle" placeholder="Book title">
+          <span class="field-label">Author</span>
+          <input type="text" id="bookAuthor" placeholder="Author">
+          <div style="display:flex; gap:8px;">
+            <div style="flex:1;">
+              <span class="field-label">Current page</span>
+              <input type="text" id="bookCurrentPage" placeholder="0" inputmode="numeric">
+            </div>
+            <div style="flex:1;">
+              <span class="field-label">Total pages</span>
+              <input type="text" id="bookTotalPage" placeholder="0" inputmode="numeric">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="bookProgressBar" style="width:0%;"></div></div>
+      <div class="sub" style="font-size:12px;" id="bookProgressLabel">0 of 0 pages</div>
+    </div>
+
+    <div class="card">
+      <h2>Reading Log</h2>
+      <div id="readingLogList"></div>
+      <div class="log-form">
+        <input type="text" class="pages-input" id="logPages" placeholder="Pages" inputmode="numeric">
+        <input type="text" class="note-input" id="logNote" placeholder="Note (optional)">
+        <button id="logAddBtn">Log</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRIENDS VIEW -->
+  <div class="view" id="view-friends">
+
+    <div class="card" id="friendProfileSetupCard">
+      <h2>Set Up Your Profile</h2>
+      <div class="note">Pick a name and a PIN. The PIN protects your entry — friends can see everyone's progress, but only you can update yours. First time using this name sets the PIN; after that, it has to match.</div>
+      <label class="field-label">Display name</label>
+      <input type="text" id="friendNameInput" placeholder="e.g. Em" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13.5px;margin-bottom:10px;">
+      <label class="field-label">PIN (4+ digits)</label>
+      <input type="password" id="friendPinInput" placeholder="e.g. 4821" inputmode="numeric" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13.5px;margin-bottom:10px;">
+      <button class="action-btn solid" id="friendSaveProfileBtn" style="width:100%;">Save & Connect</button>
+      <div id="friendProfileStatus" style="font-size:12.5px;font-weight:600;margin-top:8px;"></div>
+    </div>
+
+    <div class="card" id="friendProfileActiveCard" style="display:none;">
+      <h2>Your Profile</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:15px;" id="friendActiveName"></div>
+          <div id="friendSyncStatus" style="font-size:12px;color:var(--sub);margin-top:2px;">Not synced yet</div>
+        </div>
+        <button class="modal-cancel" id="friendSwitchProfileBtn" style="margin-top:0;width:auto;padding:8px 14px;">Switch name</button>
+      </div>
+      <div class="note" style="margin-top:10px;">Your streak, days completed, current book, and today's workout/water status sync automatically as you use the app. Nothing else is shared.</div>
+    </div>
+
+    <div class="card">
+      <h2>Friends Feed</h2>
+      <button class="action-btn" id="friendRefreshBtn" style="width:100%;margin-bottom:12px;">🔄 Refresh feed</button>
+      <div id="friendFeedList"></div>
+    </div>
+
+  </div>
+
+  <!-- RULES VIEW -->
+  <div class="view" id="view-rules">
+    <div class="card">
+      <h2>The 6 Daily Rules</h2>
+      <ul class="rules">
+        <li><div class="dot"></div>1x60min workout (45 min strength, 15 min cardio) — OR hit 10,000 steps</li>
+        <li><div class="dot"></div>1.5L water minimum</li>
+        <li><div class="dot"></div>Follow diet: high protein, high fiber, 1,600 cal deficit</li>
+        <li><div class="dot"></div>No alcohol</li>
+        <li><div class="dot"></div>Read 10 pages</li>
+        <li><div class="dot"></div>Progress picture on waking (optional)</li>
+      </ul>
+      <div class="note">Like true 75 Hard: missing any single day resets the whole challenge back to Day 1, starting today. Nothing gets deleted — your previous attempt is archived — but the day count and streak start over from scratch.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">×</button>
+  <img id="lbImg" src="">
+  <div class="lb-label" id="lbLabel"></div>
+  <button class="lb-del" id="lbShareToggle" style="background:var(--accent);margin-top:10px;">Share with friends</button>
+  <button class="lb-del" id="lbDel">Delete photo</button>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal-box" style="max-width:340px;">
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMessage" style="font-size:13.5px;color:var(--sub);margin:0 0 16px;line-height:1.4;"></p>
+    <div style="display:flex;gap:8px;">
+      <button class="modal-cancel" id="confirmCancelBtn" style="flex:1;margin-top:0;">Cancel</button>
+      <button class="action-btn solid" id="confirmOkBtn" style="flex:1;">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">Saves progress on this device automatically. Add to your home screen for quick daily access.</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = '75medium_data';
+  const TOTAL_DAYS = 75;
+  const ITEMS = ['workout','water','diet','noalcohol','reading','progresspic'];
+  const CORE_ITEMS = ['workout','water','diet','noalcohol','reading'];
+
+  // Custom confirm modal — replaces native confirm() which gets silently blocked
+  // inside sandboxed preview frames. Usage: showConfirm('message', () => { ...on confirm... });
+  function showConfirm(message, onConfirm, title){
+    document.getElementById('confirmTitle').textContent = title || 'Are you sure?';
+    document.getElementById('confirmMessage').textContent = message;
+    const overlay = document.getElementById('confirmOverlay');
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    cancelBtn.style.display = '';
+    okBtn.textContent = 'Continue';
+    overlay.classList.add('active');
+
+    function cleanup(){
+      overlay.classList.remove('active');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+    }
+    function onOk(){ cleanup(); onConfirm(); }
+    function onCancel(){ cleanup(); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  }
+
+  // Notice-only variant (single OK button) — replaces native alert() for the same reason.
+  function showNotice(message, title){
+    document.getElementById('confirmTitle').textContent = title || 'Heads up';
+    document.getElementById('confirmMessage').textContent = message;
+    const overlay = document.getElementById('confirmOverlay');
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    cancelBtn.style.display = 'none';
+    okBtn.textContent = 'OK';
+    overlay.classList.add('active');
+
+    function cleanup(){
+      overlay.classList.remove('active');
+      cancelBtn.style.display = '';
+      okBtn.textContent = 'Continue';
+      okBtn.removeEventListener('click', onOk);
+    }
+    function onOk(){ cleanup(); }
+    okBtn.addEventListener('click', onOk);
+  }
+
+  const categoryLabels = {breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner', snack:'Snacks'};
+  const dietTagLabels = {vegan:'Vegan', vegetarian:'Vegetarian', pescatarian:'Pescatarian', meat:'Meat'};
+  const DIET_TAG_KEYS = ['vegan','vegetarian','pescatarian','meat'];
+
+  const presetSeedLibrary = [
+    // Breakfast
+    {name:'Greek yogurt + berries + chia', calories:320, protein:28, fiber:7, ingredients:'1 cup plain Greek yogurt, 3/4 cup mixed berries, 1 tbsp chia seeds, 1 tsp honey', mealType:'breakfast', dietTags:['vegetarian']},
+    {name:'Turkey sausage breakfast sandwich', calories:350, protein:26, fiber:4, ingredients:'1 turkey sausage patty, 1 egg, 1 slice light cheese, whole grain English muffin', mealType:'breakfast', dietTags:['meat']},
+    {name:'Tofu scramble breakfast bowl', calories:310, protein:20, fiber:8, ingredients:'1/2 block firm tofu, spinach, bell pepper, turmeric, 1/2 cup black beans, salsa', mealType:'breakfast', dietTags:['vegan']},
+    {name:'Overnight oats with protein', calories:340, protein:30, fiber:6, ingredients:'1/2 cup rolled oats, 1/2 cup milk, 1 scoop protein powder, 1/2 cup berries', mealType:'breakfast', dietTags:['vegetarian']},
+    {name:'Smoked trout & egg plate', calories:330, protein:29, fiber:3, ingredients:'2 eggs, 2oz smoked trout, cucumber, cherry tomatoes', mealType:'breakfast', dietTags:['pescatarian']},
+    // Lunch
+    {name:'Chicken thigh rice bowl', calories:430, protein:38, fiber:6, ingredients:'5oz grilled chicken thigh, 2/3 cup rice, broccoli, bell peppers, sesame-soy sauce', mealType:'lunch', dietTags:['meat']},
+    {name:'Tuna rice bowl', calories:400, protein:32, fiber:5, ingredients:'1 can tuna, 2/3 cup rice, cucumber, 1/4 avocado, light mayo, sriracha', mealType:'lunch', dietTags:['pescatarian']},
+    {name:'Chickpea grain bowl', calories:410, protein:16, fiber:12, ingredients:'1 cup chickpeas, 2/3 cup rice, roasted mixed veggies, tahini dressing', mealType:'lunch', dietTags:['vegan','vegetarian']},
+    {name:'Ground beef + Sola wrap', calories:420, protein:34, fiber:9, ingredients:'4oz lean ground beef, Sola low-carb wrap, lettuce, tomato, light cheese', mealType:'lunch', dietTags:['meat']},
+    {name:'Shrimp stir-fry bowl', calories:390, protein:33, fiber:5, ingredients:'5oz shrimp, mixed stir-fry vegetables, 1/2 cup rice, garlic sauce', mealType:'lunch', dietTags:['pescatarian']},
+    {name:'Lentil soup + side salad', calories:380, protein:20, fiber:14, ingredients:'1.5 cups lentil soup, mixed greens, olive oil vinaigrette', mealType:'lunch', dietTags:['vegan','vegetarian']},
+    // Dinner
+    {name:'Baked chicken thighs + rice + veg', calories:460, protein:40, fiber:5, ingredients:'2 chicken thighs (skin off), 1/2 cup rice, green beans', mealType:'dinner', dietTags:['meat']},
+    {name:'Ground beef stir-fry', calories:440, protein:36, fiber:6, ingredients:'5oz lean ground beef, mixed stir-fry vegetables, 1/2 cup rice, soy-garlic sauce', mealType:'dinner', dietTags:['meat']},
+    {name:'Baked cod & roasted veggies', calories:380, protein:35, fiber:6, ingredients:'6oz cod fillet, roasted zucchini, roasted carrots, olive oil, lemon', mealType:'dinner', dietTags:['pescatarian']},
+    {name:'Egg + turkey sausage skillet', calories:400, protein:34, fiber:7, ingredients:'3 eggs, turkey sausage, spinach, peppers, Sola toast', mealType:'dinner', dietTags:['meat','vegetarian']},
+    {name:'Tofu & veggie stir-fry', calories:390, protein:22, fiber:9, ingredients:'1 block firm tofu, broccoli, snap peas, carrots, rice, teriyaki sauce', mealType:'dinner', dietTags:['vegan']},
+    // Snacks
+    {name:'String cheese + banana', calories:170, protein:9, fiber:3, ingredients:'1 string cheese, 1 banana', mealType:'snack', dietTags:['vegetarian']},
+    {name:'Greek yogurt (small) + berries', calories:150, protein:14, fiber:2, ingredients:'3/4 cup Greek yogurt, 1/2 cup berries', mealType:'snack', dietTags:['vegetarian']},
+    {name:'Boiled egg + cucumber slices', calories:110, protein:7, fiber:1, ingredients:'1 boiled egg, sliced cucumber', mealType:'snack', dietTags:['vegetarian']},
+    {name:'Dark chocolate (85%+), 2 squares', calories:90, protein:1, fiber:2, ingredients:'2 squares dark chocolate 85%+', mealType:'snack', dietTags:['vegan','vegetarian']},
+    {name:'Hummus + veggie sticks', calories:150, protein:6, fiber:5, ingredients:'1/4 cup hummus, carrot sticks, celery sticks', mealType:'snack', dietTags:['vegan','vegetarian']},
+    {name:'Edamame', calories:120, protein:11, fiber:5, ingredients:'1 cup steamed edamame, sea salt', mealType:'snack', dietTags:['vegan','vegetarian']}
+  ].map((m, i)=>Object.assign({id:'preset_'+i, isCustom:false}, m));
+
+  const defaultWorkouts = [
+    {id:'fullbody', title:'Full Body', exercises:[
+      {name:'Goblet squat', detail:'3 x 12'},
+      {name:'Push-ups (or bench press)', detail:'3 x 10'},
+      {name:'Bent-over row', detail:'3 x 12'},
+      {name:'Romanian deadlift', detail:'3 x 10'},
+      {name:'Plank', detail:'3 x 30s'}
+    ]},
+    {id:'upper', title:'Upper Body', exercises:[
+      {name:'Dumbbell shoulder press', detail:'3 x 10'},
+      {name:'Lat pulldown', detail:'3 x 12'},
+      {name:'Chest press machine', detail:'3 x 12'},
+      {name:'Bicep curls', detail:'3 x 12'},
+      {name:'Tricep pushdown', detail:'3 x 12'}
+    ]},
+    {id:'lower', title:'Lower Body', exercises:[
+      {name:'Leg press', detail:'3 x 12'},
+      {name:'Walking lunges', detail:'3 x 12 each leg'},
+      {name:'Leg curl machine', detail:'3 x 12'},
+      {name:'Hip thrust', detail:'3 x 12'},
+      {name:'Calf raises', detail:'3 x 15'}
+    ]},
+    {id:'hiitcore', title:'HIIT & Core', exercises:[
+      {name:'Incline treadmill walk / bike intervals', detail:'15 min'},
+      {name:'Bicycle crunches', detail:'3 x 20'},
+      {name:'Mountain climbers', detail:'3 x 30s'},
+      {name:'Russian twists', detail:'3 x 20'},
+      {name:'Dead bug', detail:'3 x 12 each side'}
+    ]}
+  ];
+
+  // Extra presets offered in the "Add workout plan" picker (on top of the 4 already loaded by default)
+  const presetLibrary = [
+    {title:'Push (Chest/Shoulders/Triceps)', exercises:[
+      {name:'Dumbbell bench press', detail:'3 x 10'},
+      {name:'Shoulder press machine', detail:'3 x 10'},
+      {name:'Incline chest fly', detail:'3 x 12'},
+      {name:'Lateral raises', detail:'3 x 15'},
+      {name:'Tricep dips (assisted or bench)', detail:'3 x 10'}
+    ]},
+    {title:'Pull (Back/Biceps)', exercises:[
+      {name:'Lat pulldown', detail:'3 x 12'},
+      {name:'Seated cable row', detail:'3 x 12'},
+      {name:'Face pulls', detail:'3 x 15'},
+      {name:'Bicep curls (dumbbell)', detail:'3 x 12'},
+      {name:'Hammer curls', detail:'3 x 12'}
+    ]},
+    {title:'Legs & Glutes', exercises:[
+      {name:'Barbell or smith machine squat', detail:'3 x 10'},
+      {name:'Hip thrust', detail:'3 x 12'},
+      {name:'Bulgarian split squat', detail:'3 x 10 each leg'},
+      {name:'Cable kickbacks', detail:'3 x 15 each leg'},
+      {name:'Calf raises', detail:'3 x 15'}
+    ]},
+    {title:'Glute Focus', exercises:[
+      {name:'Hip thrust', detail:'4 x 12'},
+      {name:'Cable kickbacks', detail:'3 x 15 each leg'},
+      {name:'Sumo squat', detail:'3 x 12'},
+      {name:'Glute bridge walk-outs', detail:'3 x 10'},
+      {name:'Banded lateral walks', detail:'3 x 20 steps'}
+    ]},
+    {title:'Arms Focus', exercises:[
+      {name:'Bicep curls', detail:'3 x 12'},
+      {name:'Hammer curls', detail:'3 x 12'},
+      {name:'Tricep pushdown', detail:'3 x 12'},
+      {name:'Overhead tricep extension', detail:'3 x 12'},
+      {name:'Cable curl + pushdown superset', detail:'2 x 15'}
+    ]},
+    {title:'Core & Abs', exercises:[
+      {name:'Plank', detail:'3 x 30-45s'},
+      {name:'Bicycle crunches', detail:'3 x 20'},
+      {name:'Leg raises', detail:'3 x 12'},
+      {name:'Russian twists', detail:'3 x 20'},
+      {name:'Dead bug', detail:'3 x 12 each side'}
+    ]},
+    {title:'Cardio — Steady State', exercises:[
+      {name:'Incline treadmill walk', detail:'30-40 min'},
+      {name:'Stationary bike', detail:'20 min moderate pace'}
+    ]},
+    {title:'Cardio — HIIT Intervals', exercises:[
+      {name:'Sprint intervals (30s on / 90s off)', detail:'8 rounds'},
+      {name:'Bike sprints', detail:'6 x 30s'},
+      {name:'Cooldown walk', detail:'5 min'}
+    ]},
+    {title:'Beginner Full Body (low impact)', exercises:[
+      {name:'Bodyweight squat', detail:'3 x 12'},
+      {name:'Incline push-ups', detail:'3 x 10'},
+      {name:'Seated row machine', detail:'3 x 12'},
+      {name:'Standing march / step-ups', detail:'3 x 20'},
+      {name:'Bird dog', detail:'3 x 10 each side'}
+    ]}
+  ];
+
+  function todayLocalDateString(){
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
+  let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  if(!data.startDate){ data.startDate = todayLocalDateString(); }
+  if(!data.days){ data.days = {}; }
+  if(!data.currentDay){ data.currentDay = 1; }
+  if(!data.workouts){ data.workouts = JSON.parse(JSON.stringify(defaultWorkouts)); }
+  if(!data.book){ data.book = {title:'', author:'', currentPage:'', totalPage:''}; }
+  if(!data.readingLog){ data.readingLog = []; }
+  if(!data.grocery){ data.grocery = {checkedItems:{}, customItems:[]}; }
+  if(typeof data.lastKnownStreak !== 'number'){ data.lastKnownStreak = 0; }
+  if(typeof data.lastEvaluatedDay !== 'number'){ data.lastEvaluatedDay = 0; }
+  if(!data.friendProfile){ data.friendProfile = null; } // {name, pin}
+  if(typeof data.sharedPhotoDay === 'undefined'){ data.sharedPhotoDay = null; }
+
+  // Meal library + plan setup (with migration from the old free-text meals format)
+  if(!data.mealLibrary || !data.mealPlan){
+    data.mealLibrary = JSON.parse(JSON.stringify(presetSeedLibrary));
+    data.mealPlan = {breakfast:[], lunch:[], dinner:[], snack:[]};
+
+    if(data.meals){
+      // old shape: data.meals = { breakfast:[{name,macros}], lunch:[...], dinner:[...], snacks:[...] }
+      const catMap = {breakfast:'breakfast', lunch:'lunch', dinner:'dinner', snacks:'snack'};
+      Object.keys(data.meals).forEach(oldCat=>{
+        const newCat = catMap[oldCat] || oldCat;
+        (data.meals[oldCat] || []).forEach((item, i)=>{
+          const macros = (item.macros || '').trim();
+          let ingredients = '';
+          if(macros.includes('—')){
+            const before = macros.split('—')[0].trim();
+            if(before && (before.includes(',') || /\d/.test(before))) ingredients = before;
+          }
+          if(!ingredients) ingredients = item.name || '';
+          const newItem = {
+            id: 'migrated_'+newCat+'_'+i+'_'+Date.now(),
+            name: item.name || 'Untitled meal',
+            calories: 0,
+            protein: 0,
+            fiber: 0,
+            ingredients: ingredients,
+            mealType: newCat,
+            dietTags: [],
+            isCustom: true
+          };
+          data.mealLibrary.push(newItem);
+          if(!data.mealPlan[newCat]) data.mealPlan[newCat] = [];
+          data.mealPlan[newCat].push(newItem.id);
+        });
+      });
+      delete data.meals;
+    } else {
+      // fresh install — seed a starter plan from the presets
+      const findId = name => (data.mealLibrary.find(m=>m.name===name) || {}).id;
+      data.mealPlan.breakfast = [findId('Greek yogurt + berries + chia'), findId('Turkey sausage breakfast sandwich'), findId('Overnight oats with protein')].filter(Boolean);
+      data.mealPlan.lunch = [findId('Chicken thigh rice bowl'), findId('Tuna rice bowl'), findId('Ground beef + Sola wrap')].filter(Boolean);
+      data.mealPlan.dinner = [findId('Baked chicken thighs + rice + veg'), findId('Ground beef stir-fry'), findId('Egg + turkey sausage skillet')].filter(Boolean);
+      data.mealPlan.snack = [findId('String cheese + banana'), findId('Greek yogurt (small) + berries'), findId('Boiled egg + cucumber slices'), findId('Dark chocolate (85%+), 2 squares')].filter(Boolean);
+    }
+  }
+
+  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  function getLibraryItem(id){ return data.mealLibrary.find(m=>m.id === id); }
+
+  function backfillMissingNumbers(){
+    let changed = false;
+    data.mealLibrary.forEach(item=>{
+      if(item.isCustom && !item.calories){
+        const match = presetSeedLibrary.find(p => p.name.trim().toLowerCase() === item.name.trim().toLowerCase());
+        if(match){
+          item.calories = match.calories;
+          item.protein = match.protein;
+          item.fiber = match.fiber;
+          if(!item.ingredients) item.ingredients = match.ingredients;
+          if(!item.dietTags || !item.dietTags.length) item.dietTags = match.dietTags.slice();
+          changed = true;
+        }
+      }
+    });
+    if(changed) save();
+  }
+  backfillMissingNumbers();
+
+  function dayData(n){
+    if(!data.days[n]) data.days[n] = { checks:{}, water:0, note:'', photo:null };
+    return data.days[n];
+  }
+  function dateForDay(n){
+    const [y, m, d0] = data.startDate.split('-').map(Number);
+    const d = new Date(y, m - 1, d0); // constructor form = local time, avoids the UTC-parsing shift
+    d.setDate(d.getDate() + (n-1));
+    return d.toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
+  }
+  function isCoreDone(n){
+    const d = dayData(n);
+    return CORE_ITEMS.every(k => d.checks[k]);
+  }
+  function isAnyDone(n){
+    const d = dayData(n);
+    return CORE_ITEMS.some(k => d.checks[k]);
+  }
+
+  function renderDay(){
+    const resetHappened = checkForStreakBreak();
+    if(resetHappened){
+      renderDay(); // re-render fresh against the new Day 1 state
+      return;
+    }
+    const n = data.currentDay;
+    document.getElementById('dayLabel').textContent = 'Day ' + n;
+    document.getElementById('dateLabel').textContent = dateForDay(n);
+    document.getElementById('dayCounter').textContent = n;
+    document.getElementById('photoDayNum').textContent = n;
+    const d = dayData(n);
+    ITEMS.forEach(key=>{
+      const el = document.querySelector('#checklistItems input[data-key="'+key+'"]');
+      el.checked = !!d.checks[key];
+    });
+    document.getElementById('dayNote').value = d.note || '';
+    renderWater();
+    renderStreak();
+    renderGrid();
+    renderPhotoGallery();
+  }
+
+  function renderWater(){
+    const container = document.getElementById('waterCups');
+    container.innerHTML = '';
+    const n = data.currentDay;
+    const d = dayData(n);
+    for(let i=1;i<=6;i++){
+      const cup = document.createElement('div');
+      cup.className = 'water-cup' + (i<=d.water ? ' filled' : '');
+      cup.textContent = i<=d.water ? '✓' : '';
+      cup.addEventListener('click', ()=>{
+        d.water = (d.water === i) ? i-1 : i;
+        d.checks.water = d.water >= 6;
+        document.querySelector('#checklistItems input[data-key="water"]').checked = d.checks.water;
+        save(); renderWater(); renderStreak(); renderGrid();
+        schedulePublish();
+      });
+      container.appendChild(cup);
+    }
+  }
+
+  function computeStreak(){
+    let streak = 0;
+    for(let n = data.currentDay; n>=1; n--){
+      if(isCoreDone(n)) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  // Streak-through-yesterday, used only for break detection so an in-progress "today"
+  // (not yet checked off) never gets mistaken for a missed day.
+  function computeStreakThroughYesterday(){
+    let streak = 0;
+    for(let n = data.currentDay - 1; n>=1; n--){
+      if(isCoreDone(n)) streak++;
+      else break;
+    }
+    return streak;
+  }
+
+  // Like true 75 Hard: archives the failed attempt (nothing is deleted) and restarts
+  // the active tracker fresh at Day 1, today.
+  function performChallengeReset(missedDay){
+    if(!data.pastAttempts) data.pastAttempts = [];
+    data.pastAttempts.push({
+      startDate: data.startDate,
+      daysReached: missedDay - 1,
+      missedDay: missedDay,
+      endDate: todayLocalDateString(),
+      days: data.days
+    });
+
+    data.days = {};
+    data.currentDay = 1;
+    data.startDate = todayLocalDateString();
+    data.lastKnownStreak = 0;
+    data.lastEvaluatedDay = 1;
+    data.sharedPhotoDay = null;
+    save();
+
+    showNotice(
+      'Day ' + missedDay + ' wasn\'t completed, so — like true 75 Hard — the challenge restarts from Day 1, starting today. Your previous attempt (reached Day ' + (missedDay - 1) + ') wasn\'t deleted, just archived.',
+      'Challenge restarted'
+    );
+    schedulePublish();
+  }
+
+  // Runs once whenever you land on a new "current day" (page load or day navigation),
+  // not on every checkbox click — so it only judges days that have actually passed.
+  // Returns true if a full challenge reset just happened (caller should re-render).
+  function checkForStreakBreak(){
+    if(data.lastEvaluatedDay === data.currentDay) return false;
+    const yesterday = data.currentDay - 1;
+    if(yesterday >= 1 && !isCoreDone(yesterday)){
+      performChallengeReset(yesterday);
+      return true;
+    }
+    data.lastKnownStreak = computeStreakThroughYesterday();
+    data.lastEvaluatedDay = data.currentDay;
+    save();
+    return false;
+  }
+
+  function renderStreak(){
+    const streak = computeStreak();
+    document.getElementById('streakCounter').textContent = streak;
+    const banner = document.getElementById('streakBanner');
+
+    if(streak === 0){
+      banner.textContent = "Let's get today locked in 💪";
+      banner.style.background = '#f0edff';
+      banner.style.color = '#7c5cff';
+    } else {
+      banner.textContent = streak + ' day streak — keep it rolling';
+      banner.style.background = '#e8f8ee';
+      banner.style.color = '#1f9d55';
+    }
+  }
+
+  function renderGrid(){
+    const grid = document.getElementById('grid75');
+    grid.innerHTML = '';
+    for(let n=1;n<=TOTAL_DAYS;n++){
+      const cell = document.createElement('div');
+      let cls = 'cell';
+      if(isCoreDone(n)) cls += ' done';
+      else if(isAnyDone(n)) cls += ' partial';
+      if(n === data.currentDay) cls += ' today';
+      cell.className = cls;
+      cell.textContent = n;
+      cell.addEventListener('click', ()=>{ data.currentDay = n; save(); renderDay(); });
+      grid.appendChild(cell);
+    }
+  }
+
+  document.querySelectorAll('#checklistItems input[type=checkbox]').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      const d = dayData(data.currentDay);
+      d.checks[el.dataset.key] = el.checked;
+      if(el.dataset.key === 'water'){
+        d.water = el.checked ? 6 : 0;
+        renderWater();
+      }
+      save(); renderStreak(); renderGrid();
+      schedulePublish();
+    });
+  });
+
+  document.getElementById('dayNote').addEventListener('input', (e)=>{
+    dayData(data.currentDay).note = e.target.value;
+    save();
+  });
+
+  document.getElementById('prevDay').addEventListener('click', ()=>{
+    if(data.currentDay > 1){ data.currentDay--; save(); renderDay(); }
+  });
+  document.getElementById('nextDay').addEventListener('click', ()=>{
+    if(data.currentDay < TOTAL_DAYS){ data.currentDay++; save(); renderDay(); }
+  });
+
+  let friendFeedInterval = null;
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('view-'+tab.dataset.tab).classList.add('active');
+
+      clearInterval(friendFeedInterval);
+      if(tab.dataset.tab === 'friends'){
+        renderFriendProfileUI();
+        loadFriendFeed();
+        friendFeedInterval = setInterval(loadFriendFeed, 30000);
+      }
+    });
+  });
+
+  // ---------- PHOTOS ----------
+  function setPhotoStatus(msg){
+    document.getElementById('photoProcessingStatus').textContent = msg || '';
+  }
+
+  function decodeToImage(fileOrBlob){
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(fileOrBlob);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode-failed')); };
+      img.src = url;
+    });
+  }
+
+  function saveDecodedPhoto(img){
+    const maxW = 480;
+    const scale = Math.min(1, maxW / img.width);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+    const d = dayData(data.currentDay);
+    d.photo = dataUrl;
+    d.checks.progresspic = true;
+
+    save();
+    document.querySelector('#checklistItems input[data-key="progresspic"]').checked = true;
+    renderPhotoGallery();
+    renderGrid();
+  }
+
+  document.getElementById('photoInput').addEventListener('change', async function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    e.target.value = '';
+
+    try{
+      let img;
+      try{
+        // Attempt 1: direct decode via blob URL — works for normal JPEG/PNG/etc.
+        img = await decodeToImage(file);
+      } catch(decodeErr){
+        // Attempt 2: this is likely HEIC/HEIF (common on iPhone even when the file is
+        // named .jpeg) — convert it to a real JPEG entirely in-browser, then decode that.
+        if(typeof HeicTo === 'undefined'){
+          throw decodeErr;
+        }
+        setPhotoStatus('Converting photo…');
+        const jpegBlob = await HeicTo({ blob: file, type: 'image/jpeg', quality: 0.8 });
+        img = await decodeToImage(jpegBlob);
+      }
+      setPhotoStatus('');
+      saveDecodedPhoto(img);
+    } catch(err){
+      setPhotoStatus('');
+      if(err && err.name === 'QuotaExceededError'){
+        showNotice('Storage is full — try deleting an older photo before adding a new one.', 'Photo not saved');
+      } else {
+        showNotice('This browser couldn\'t open that photo, even after trying to convert it. Try picking a different photo, or convert it to JPG first (in Photos, use Share \u2192 Save as JPEG, or change your camera format under Settings \u2192 Camera \u2192 Formats \u2192 Most Compatible).', 'Photo failed to load');
+      }
+    }
+  });
+
+  function renderPhotoGallery(){
+    const gallery = document.getElementById('photoGallery');
+    gallery.innerHTML = '';
+    const dayNums = Object.keys(data.days)
+      .filter(n => data.days[n].photo)
+      .sort((a,b)=>Number(a)-Number(b));
+    document.getElementById('photoEmptyMsg').style.display = dayNums.length ? 'none' : 'block';
+    dayNums.forEach(n=>{
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.innerHTML = '<img src="'+data.days[n].photo+'"><div class="plabel">Day '+n+'</div>';
+      thumb.addEventListener('click', ()=>openLightbox(n));
+      gallery.appendChild(thumb);
+    });
+  }
+
+  function openLightbox(n){
+    document.getElementById('lbImg').src = data.days[n].photo;
+    document.getElementById('lbLabel').textContent = 'Day ' + n + ' — ' + dateForDay(Number(n));
+    document.getElementById('lightbox').classList.add('active');
+
+    const shareBtn = document.getElementById('lbShareToggle');
+    function refreshShareBtn(){
+      const isShared = data.sharedPhotoDay === Number(n);
+      shareBtn.textContent = isShared ? '✓ Shared with friends (tap to unshare)' : 'Share with friends';
+      shareBtn.style.background = isShared ? 'var(--green)' : 'var(--accent)';
+    }
+    refreshShareBtn();
+    shareBtn.onclick = function(){
+      const isShared = data.sharedPhotoDay === Number(n);
+      data.sharedPhotoDay = isShared ? null : Number(n);
+      save();
+      refreshShareBtn();
+      schedulePublish();
+    };
+
+    document.getElementById('lbDel').onclick = function(){
+      showConfirm('This photo will be permanently deleted.', ()=>{
+        data.days[n].photo = null;
+        if(data.sharedPhotoDay === Number(n)) data.sharedPhotoDay = null;
+        save();
+        document.getElementById('lightbox').classList.remove('active');
+        renderPhotoGallery();
+        schedulePublish();
+      }, 'Delete this photo?');
+    };
+  }
+  document.getElementById('lbClose').addEventListener('click', ()=>{
+    document.getElementById('lightbox').classList.remove('active');
+  });
+  document.getElementById('lightbox').addEventListener('click', (e)=>{
+    if(e.target.id === 'lightbox') e.currentTarget.classList.remove('active');
+  });
+
+  // ---------- MEALS (library-backed) ----------
+  const CATS = ['breakfast','lunch','dinner','snack'];
+
+  function renderAllMealCategories(){
+    CATS.forEach(renderCategorySection);
+    renderNutritionOverview();
+  }
+
+  function renderCategorySection(catKey){
+    const container = document.getElementById('cat-' + catKey);
+    container.innerHTML = '';
+    const ids = data.mealPlan[catKey] || [];
+    document.getElementById('cnt-' + catKey).textContent = ids.length ? (ids.length + ' in plan') : '';
+
+    if(!ids.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.style.fontSize = '13px';
+      empty.style.padding = '4px 0 8px';
+      empty.textContent = 'Nothing added yet.';
+      container.appendChild(empty);
+    }
+
+    ids.forEach((id, idx)=>{
+      const item = getLibraryItem(id);
+      if(!item) return;
+      container.appendChild(buildPlacedMealCard(catKey, item, idx));
+    });
+  }
+
+  function buildPlacedMealCard(catKey, item, idxInCat){
+    const card = document.createElement('div');
+    card.className = 'placed-meal';
+
+    const top = document.createElement('div');
+    top.className = 'placed-meal-top';
+    const nameInput = document.createElement('input');
+    nameInput.className = 'pm-name';
+    nameInput.type = 'text';
+    nameInput.value = item.name;
+    nameInput.addEventListener('input', ()=>{
+      item.name = nameInput.value;
+      save();
+    });
+    top.appendChild(nameInput);
+    if(!item.isCustom){
+      const badge = document.createElement('span');
+      badge.className = 'badge-preset';
+      badge.textContent = 'preset';
+      top.appendChild(badge);
+    }
+    if(!item.calories){
+      const missing = document.createElement('span');
+      missing.className = 'badge-missing';
+      missing.textContent = 'needs cals';
+      top.appendChild(missing);
+    }
+    const delBtn = document.createElement('button');
+    delBtn.className = 'del-btn';
+    delBtn.textContent = '×';
+    delBtn.title = 'Remove from this category (stays in library)';
+    delBtn.addEventListener('click', ()=>{
+      data.mealPlan[catKey].splice(idxInCat, 1);
+      save();
+      renderCategorySection(catKey);
+      renderNutritionOverview();
+    });
+    top.appendChild(delBtn);
+    card.appendChild(top);
+
+    const numRow = document.createElement('div');
+    numRow.className = 'pm-numbers';
+    [['calories','Cal'],['protein','Protein g'],['fiber','Fiber g']].forEach(([field,label])=>{
+      const wrap = document.createElement('div');
+      wrap.className = 'pm-field';
+      const lbl = document.createElement('label');
+      lbl.textContent = label;
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.inputMode = 'numeric';
+      inp.value = item[field] || '';
+      inp.addEventListener('input', ()=>{
+        item[field] = parseInt(inp.value) || 0;
+        save();
+        renderNutritionOverview();
+        const badgeCheck = card.querySelector('.badge-missing');
+        if(field==='calories'){
+          if(item.calories && badgeCheck) badgeCheck.remove();
+          if(!item.calories && !badgeCheck){
+            const m = document.createElement('span');
+            m.className = 'badge-missing';
+            m.textContent = 'needs cals';
+            top.insertBefore(m, delBtn);
+          }
+        }
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(inp);
+      numRow.appendChild(wrap);
+    });
+    card.appendChild(numRow);
+
+    const ingInput = document.createElement('input');
+    ingInput.className = 'pm-ingredients';
+    ingInput.type = 'text';
+    ingInput.value = item.ingredients || '';
+    ingInput.placeholder = 'Ingredients (comma-separated)';
+    ingInput.addEventListener('input', ()=>{
+      item.ingredients = ingInput.value;
+      save();
+    });
+    card.appendChild(ingInput);
+
+    const tagRow = document.createElement('div');
+    tagRow.className = 'pm-tags';
+    DIET_TAG_KEYS.forEach(tag=>{
+      const chip = document.createElement('span');
+      chip.className = 'diet-tag' + (item.dietTags.includes(tag) ? ' active' : '');
+      chip.textContent = dietTagLabels[tag];
+      chip.addEventListener('click', ()=>{
+        const i = item.dietTags.indexOf(tag);
+        if(i === -1) item.dietTags.push(tag); else item.dietTags.splice(i,1);
+        save();
+        chip.classList.toggle('active');
+      });
+      tagRow.appendChild(chip);
+    });
+    card.appendChild(tagRow);
+
+    return card;
+  }
+
+  function renderNutritionOverview(){
+    const container = document.getElementById('nutritionOverview');
+    container.innerHTML = '';
+
+    function catAvg(catKey, field){
+      const items = (data.mealPlan[catKey] || []).map(getLibraryItem).filter(Boolean);
+      if(!items.length) return 0;
+      return items.reduce((s,i)=>s+(Number(i[field])||0), 0) / items.length;
+    }
+
+    const avgCal = {b: catAvg('breakfast','calories'), l: catAvg('lunch','calories'), d: catAvg('dinner','calories'), s: catAvg('snack','calories')};
+    const avgProt = {b: catAvg('breakfast','protein'), l: catAvg('lunch','protein'), d: catAvg('dinner','protein'), s: catAvg('snack','protein')};
+    const avgFib = {b: catAvg('breakfast','fiber'), l: catAvg('lunch','fiber'), d: catAvg('dinner','fiber'), s: catAvg('snack','fiber')};
+
+    const typicalCal = Math.round(avgCal.b + avgCal.l + avgCal.d + 2*avgCal.s);
+    const typicalProt = Math.round(avgProt.b + avgProt.l + avgProt.d + 2*avgProt.s);
+    const typicalFib = Math.round(avgFib.b + avgFib.l + avgFib.d + 2*avgFib.s);
+    const weeklyCal = typicalCal * 7;
+
+    let missingCount = 0;
+    const seenIds = new Set();
+    CATS.forEach(cat=>{
+      (data.mealPlan[cat]||[]).forEach(id=>{
+        if(seenIds.has(id)) return;
+        seenIds.add(id);
+        const item = getLibraryItem(id);
+        if(item && !item.calories) missingCount++;
+      });
+    });
+
+    if(missingCount > 0){
+      const banner = document.createElement('div');
+      banner.className = 'missing-banner';
+      banner.textContent = "⚠ " + missingCount + " meal" + (missingCount>1?"s":"") + " in your plan still need calorie numbers — the totals below will be off until they're filled in.";
+      container.appendChild(banner);
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'nutri-grid';
+    grid.innerHTML =
+      '<div class="nutri-stat"><div class="n">' + typicalCal + '</div><div class="l">typical day cal</div></div>' +
+      '<div class="nutri-stat"><div class="n">' + typicalProt + 'g</div><div class="l">typical protein</div></div>' +
+      '<div class="nutri-stat"><div class="n">' + typicalFib + 'g</div><div class="l">typical fiber</div></div>';
+    container.appendChild(grid);
+
+    const diff = typicalCal - 1600;
+    const dayCompare = document.createElement('div');
+    dayCompare.className = 'nutri-compare ' + (Math.abs(diff) <= 100 ? 'good' : 'off');
+    dayCompare.textContent = typicalCal === 0
+      ? 'Add some meals to see a daily estimate'
+      : ('Typical day: ' + typicalCal + ' cal vs 1,600 target (' + (diff >= 0 ? '+' : '') + diff + ')');
+    container.appendChild(dayCompare);
+
+    const weekDiff = weeklyCal - 11200;
+    const weekCompare = document.createElement('div');
+    weekCompare.className = 'nutri-compare ' + (Math.abs(weekDiff) <= 700 ? 'good' : 'off');
+    weekCompare.textContent = weeklyCal === 0
+      ? 'Weekly projection needs meals with calories first'
+      : ('Weekly projection: ' + weeklyCal.toLocaleString() + ' cal vs 11,200 target (' + (weekDiff >= 0 ? '+' : '') + weekDiff.toLocaleString() + ')');
+    container.appendChild(weekCompare);
+  }
+
+  // ---------- ADD MEAL MODAL ----------
+  let currentAddCategory = null;
+
+  document.querySelectorAll('.add-btn[data-cat]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentAddCategory = btn.dataset.cat;
+      document.getElementById('addMealCatLabel').textContent = categoryLabels[currentAddCategory];
+      document.getElementById('cfIngredients').value = '';
+      document.getElementById('cfName').value = '';
+      document.getElementById('cfCalories').value = '';
+      document.getElementById('cfProtein').value = '';
+      document.getElementById('cfFiber').value = '';
+      renderCreateTagPicker([]);
+      switchModalSubtab('browse');
+      renderLibraryBrowse();
+      document.getElementById('addMealOverlay').classList.add('active');
+    });
+  });
+  document.getElementById('addMealCancel').addEventListener('click', ()=>{
+    document.getElementById('addMealOverlay').classList.remove('active');
+  });
+  document.getElementById('addMealOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'addMealOverlay') document.getElementById('addMealOverlay').classList.remove('active');
+  });
+  document.querySelectorAll('.modal-tab[data-subtab]').forEach(tab=>{
+    tab.addEventListener('click', ()=> switchModalSubtab(tab.dataset.subtab));
+  });
+  function switchModalSubtab(name){
+    document.querySelectorAll('.modal-tab[data-subtab]').forEach(t=>t.classList.toggle('active', t.dataset.subtab === name));
+    document.getElementById('subview-browse').classList.toggle('active', name === 'browse');
+    document.getElementById('subview-create').classList.toggle('active', name === 'create');
+  }
+
+  let activeLibraryFilters = new Set();
+  function renderLibraryTagFilters(){
+    const wrap = document.getElementById('libraryTagFilters');
+    wrap.innerHTML = '';
+    DIET_TAG_KEYS.forEach(tag=>{
+      const chip = document.createElement('span');
+      chip.className = 'diet-tag' + (activeLibraryFilters.has(tag) ? ' active' : '');
+      chip.textContent = dietTagLabels[tag];
+      chip.addEventListener('click', ()=>{
+        if(activeLibraryFilters.has(tag)) activeLibraryFilters.delete(tag); else activeLibraryFilters.add(tag);
+        renderLibraryTagFilters();
+        renderLibraryBrowse();
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderLibraryBrowse(){
+    renderLibraryTagFilters();
+    const results = document.getElementById('libraryResults');
+    results.innerHTML = '';
+    const search = (document.getElementById('librarySearch').value || '').toLowerCase().trim();
+    const showAll = document.getElementById('showAllTypes').checked;
+
+    const matches = data.mealLibrary.filter(item=>{
+      if(!showAll && item.mealType !== currentAddCategory) return false;
+      if(search && !item.name.toLowerCase().includes(search)) return false;
+      if(activeLibraryFilters.size > 0){
+        const hasTag = [...activeLibraryFilters].some(t => item.dietTags.includes(t));
+        if(!hasTag) return false;
+      }
+      return true;
+    });
+
+    if(!matches.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.style.fontSize = '13px';
+      empty.textContent = 'No matches — try clearing filters or create a new meal.';
+      results.appendChild(empty);
+      return;
+    }
+
+    matches.forEach(item=>{
+      const alreadyIn = (data.mealPlan[currentAddCategory]||[]).includes(item.id);
+      const row = document.createElement('div');
+      row.className = 'lib-result';
+      const tagStr = item.dietTags.map(t=>dietTagLabels[t]).join(', ');
+      row.innerHTML = '<div><div class="lname">' + item.name + '</div><div class="lnums">' +
+        (item.calories || '?') + ' cal · ' + (item.protein||0) + 'g protein · ' + (item.fiber||0) + 'g fiber' +
+        (tagStr ? ' · ' + tagStr : '') + '</div></div>';
+      const btn = document.createElement('button');
+      btn.textContent = alreadyIn ? 'Added' : 'Add';
+      btn.disabled = alreadyIn;
+      btn.addEventListener('click', ()=>{
+        data.mealPlan[currentAddCategory].push(item.id);
+        save();
+        renderCategorySection(currentAddCategory);
+        renderNutritionOverview();
+        renderLibraryBrowse();
+      });
+      row.appendChild(btn);
+      results.appendChild(row);
+    });
+  }
+  document.getElementById('librarySearch').addEventListener('input', renderLibraryBrowse);
+  document.getElementById('showAllTypes').addEventListener('change', renderLibraryBrowse);
+
+  let createTagSelection = [];
+  function renderCreateTagPicker(selected){
+    createTagSelection = selected.slice();
+    const wrap = document.getElementById('cfTagPicker');
+    wrap.innerHTML = '';
+    DIET_TAG_KEYS.forEach(tag=>{
+      const chip = document.createElement('span');
+      chip.className = 'diet-tag' + (createTagSelection.includes(tag) ? ' active' : '');
+      chip.textContent = dietTagLabels[tag];
+      chip.addEventListener('click', ()=>{
+        const i = createTagSelection.indexOf(tag);
+        if(i === -1) createTagSelection.push(tag); else createTagSelection.splice(i,1);
+        chip.classList.toggle('active');
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  document.getElementById('cfSaveBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('cfName').value.trim();
+    if(!name){ showNotice('Give the meal a name first.', 'Missing name'); return; }
+    const newItem = {
+      id: 'custom_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+      name: name,
+      calories: parseInt(document.getElementById('cfCalories').value) || 0,
+      protein: parseInt(document.getElementById('cfProtein').value) || 0,
+      fiber: parseInt(document.getElementById('cfFiber').value) || 0,
+      ingredients: document.getElementById('cfIngredients').value.trim(),
+      mealType: currentAddCategory,
+      dietTags: createTagSelection.slice(),
+      isCustom: true
+    };
+    data.mealLibrary.push(newItem);
+    data.mealPlan[currentAddCategory].push(newItem.id);
+    save();
+    renderCategorySection(currentAddCategory);
+    renderNutritionOverview();
+    document.getElementById('addMealOverlay').classList.remove('active');
+  });
+
+  // ---------- IMPORT FROM CLAUDE ----------
+  function showImportStatus(msg, isError){
+    const el = document.getElementById('importStatus');
+    el.textContent = msg;
+    el.className = isError ? 'error' : 'success';
+  }
+
+  document.getElementById('importMealsBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('importTextarea').value.trim();
+    if(!raw){ showImportStatus('Paste a meal plan block first.', true); return; }
+
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    } catch(e){
+      showImportStatus('Could not read that — make sure you pasted the whole JSON block Claude gave you, with nothing extra before or after it.', true);
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      showImportStatus('Expected a list of meals in [ ] brackets — check the format.', true);
+      return;
+    }
+
+    showConfirm(
+      'This will clear your current Breakfast/Lunch/Dinner/Snack plan and replace it with the imported meals. Your meal library stays intact either way.',
+      ()=>{
+        CATS.forEach(cat => { data.mealPlan[cat] = []; });
+
+        let added = 0, updated = 0, skipped = 0;
+        parsed.forEach(entry=>{
+          if(!entry || typeof entry !== 'object') { skipped++; return; }
+          const name = (entry.name || '').toString().trim();
+          const category = CATS.includes(entry.category) ? entry.category : null;
+          if(!name || !category){ skipped++; return; }
+
+          const calories = parseInt(entry.calories) || 0;
+          const protein = parseInt(entry.protein) || 0;
+          const fiber = parseInt(entry.fiber) || 0;
+          const ingredients = (entry.ingredients || '').toString().trim();
+          const tags = Array.isArray(entry.tags) ? entry.tags.filter(t => DIET_TAG_KEYS.includes(t)) : [];
+
+          const existing = data.mealLibrary.find(m => m.name.trim().toLowerCase() === name.toLowerCase());
+          if(existing){
+            existing.calories = calories;
+            existing.protein = protein;
+            existing.fiber = fiber;
+            existing.ingredients = ingredients;
+            existing.dietTags = tags;
+            existing.mealType = category;
+            if(!data.mealPlan[category].includes(existing.id)) data.mealPlan[category].push(existing.id);
+            updated++;
+          } else {
+            const newItem = {
+              id: 'custom_' + Date.now() + '_' + Math.floor(Math.random()*10000),
+              name, calories, protein, fiber, ingredients,
+              mealType: category,
+              dietTags: tags,
+              isCustom: true
+            };
+            data.mealLibrary.push(newItem);
+            data.mealPlan[category].push(newItem.id);
+            added++;
+          }
+        });
+
+        save();
+        renderAllMealCategories();
+        renderGroceryList();
+
+        if(added === 0 && updated === 0){
+          showImportStatus('Nothing valid to import — your old plan was cleared but nothing new was added. Check that each meal has a name and a category (breakfast/lunch/dinner/snack).', true);
+        } else {
+          let msg = 'Plan replaced — imported ' + added + ' new meal' + (added===1?'':'s');
+          if(updated) msg += ', updated ' + updated;
+          if(skipped) msg += ', skipped ' + skipped + ' (missing name/category)';
+          msg += '.';
+          showImportStatus(msg, false);
+          document.getElementById('importTextarea').value = '';
+        }
+      },
+      'Replace current meal plan?'
+    );
+  });
+
+  // ---------- WORKOUTS ----------
+  function renderWorkouts(){
+    const card = document.getElementById('workoutsCard');
+    card.innerHTML = '';
+    data.workouts.forEach((plan, pIdx)=>{
+      const block = document.createElement('div');
+      block.className = 'workout-plan';
+
+      const h3 = document.createElement('h3');
+      const titleInput = document.createElement('input');
+      titleInput.className = 'plan-title';
+      titleInput.type = 'text';
+      titleInput.value = plan.title;
+      titleInput.addEventListener('input', ()=>{
+        data.workouts[pIdx].title = titleInput.value;
+        save();
+      });
+      const delPlanBtn = document.createElement('button');
+      delPlanBtn.className = 'del-btn';
+      delPlanBtn.textContent = '×';
+      delPlanBtn.addEventListener('click', ()=>{
+        showConfirm('This will remove the plan and all its exercises.', ()=>{
+          data.workouts.splice(pIdx,1);
+          save();
+          renderWorkouts();
+        }, 'Delete this whole workout plan?');
+      });
+      h3.appendChild(titleInput);
+      h3.appendChild(delPlanBtn);
+      block.appendChild(h3);
+
+      plan.exercises.forEach((ex, eIdx)=>{
+        const row = document.createElement('div');
+        row.className = 'exercise-row';
+        const nameInput = document.createElement('input');
+        nameInput.className = 'ex-name';
+        nameInput.type = 'text';
+        nameInput.value = ex.name;
+        nameInput.placeholder = 'Exercise';
+        nameInput.addEventListener('input', ()=>{
+          data.workouts[pIdx].exercises[eIdx].name = nameInput.value;
+          save();
+        });
+        const detailInput = document.createElement('input');
+        detailInput.className = 'ex-detail';
+        detailInput.type = 'text';
+        detailInput.value = ex.detail;
+        detailInput.placeholder = 'Sets x reps';
+        detailInput.addEventListener('input', ()=>{
+          data.workouts[pIdx].exercises[eIdx].detail = detailInput.value;
+          save();
+        });
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del-btn';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', ()=>{
+          data.workouts[pIdx].exercises.splice(eIdx,1);
+          save();
+          renderWorkouts();
+        });
+        row.appendChild(nameInput);
+        row.appendChild(detailInput);
+        row.appendChild(delBtn);
+        block.appendChild(row);
+      });
+
+      const addExBtn = document.createElement('button');
+      addExBtn.className = 'add-btn';
+      addExBtn.textContent = '+ Add exercise';
+      addExBtn.addEventListener('click', ()=>{
+        data.workouts[pIdx].exercises.push({name:'', detail:''});
+        save();
+        renderWorkouts();
+      });
+      block.appendChild(addExBtn);
+
+      card.appendChild(block);
+    });
+  }
+
+  function openPlanPicker(){
+    const list = document.getElementById('planPickerList');
+    list.innerHTML = '';
+
+    const customRow = document.createElement('div');
+    customRow.className = 'preset-item custom-item';
+    customRow.innerHTML = '<div><div class="pname">Blank / custom plan</div><div class="pcount">start from scratch</div></div>';
+    const customBtn = document.createElement('button');
+    customBtn.textContent = 'Add';
+    customBtn.addEventListener('click', ()=>{
+      data.workouts.push({id:'plan'+Date.now(), title:'New Plan', exercises:[{name:'', detail:''}]});
+      save();
+      renderWorkouts();
+      closePlanPicker();
+    });
+    customRow.appendChild(customBtn);
+    list.appendChild(customRow);
+
+    presetLibrary.forEach(preset=>{
+      const row = document.createElement('div');
+      row.className = 'preset-item';
+      row.innerHTML = '<div><div class="pname">'+preset.title+'</div><div class="pcount">'+preset.exercises.length+' exercises</div></div>';
+      const btn = document.createElement('button');
+      btn.textContent = 'Add';
+      btn.addEventListener('click', ()=>{
+        data.workouts.push({
+          id:'plan'+Date.now()+Math.floor(Math.random()*1000),
+          title: preset.title,
+          exercises: JSON.parse(JSON.stringify(preset.exercises))
+        });
+        save();
+        renderWorkouts();
+        closePlanPicker();
+      });
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
+
+    document.getElementById('planPickerOverlay').classList.add('active');
+  }
+  function closePlanPicker(){
+    document.getElementById('planPickerOverlay').classList.remove('active');
+  }
+  document.getElementById('addPlanBtn').addEventListener('click', openPlanPicker);
+  document.getElementById('planPickerCancel').addEventListener('click', closePlanPicker);
+  document.getElementById('planPickerOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'planPickerOverlay') closePlanPicker();
+  });
+
+  // ---------- WORKOUT IMPORT FROM CLAUDE ----------
+  function showWorkoutImportStatus(msg, isError){
+    const el = document.getElementById('workoutImportStatus');
+    el.textContent = msg;
+    el.className = isError ? 'error' : 'success';
+  }
+
+  document.getElementById('workoutImportBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('workoutImportTextarea').value.trim();
+    if(!raw){ showWorkoutImportStatus('Paste a workout plan block first.', true); return; }
+
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    } catch(e){
+      showWorkoutImportStatus('Could not read that — make sure you pasted the whole JSON block Claude gave you, with nothing extra before or after it.', true);
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      showWorkoutImportStatus('Expected a list of plans in [ ] brackets — check the format.', true);
+      return;
+    }
+
+    const validPlans = [];
+    let skipped = 0;
+    parsed.forEach(entry=>{
+      if(!entry || typeof entry !== 'object'){ skipped++; return; }
+      const title = (entry.title || '').toString().trim();
+      const exercisesRaw = Array.isArray(entry.exercises) ? entry.exercises : [];
+      if(!title || !exercisesRaw.length){ skipped++; return; }
+      const exercises = exercisesRaw
+        .map(ex => ({
+          name: (ex && ex.name ? ex.name.toString().trim() : ''),
+          detail: (ex && ex.detail ? ex.detail.toString().trim() : '')
+        }))
+        .filter(ex => ex.name);
+      if(!exercises.length){ skipped++; return; }
+      validPlans.push({ id: 'imported_' + Date.now() + '_' + Math.floor(Math.random()*10000), title, exercises });
+    });
+
+    if(!validPlans.length){
+      showWorkoutImportStatus('Nothing valid to import — each plan needs a title and at least one exercise with a name.', true);
+      return;
+    }
+
+    showConfirm(
+      'This will remove all ' + data.workouts.length + ' of your current workout plans and replace them with the ' + validPlans.length + ' imported plan' + (validPlans.length===1?'':'s') + '.',
+      ()=>{
+        data.workouts = validPlans;
+        save();
+        renderWorkouts();
+        let msg = 'Replaced your plans — imported ' + validPlans.length + ' plan' + (validPlans.length===1?'':'s');
+        if(skipped) msg += ', skipped ' + skipped + ' (missing title/exercises)';
+        msg += '.';
+        showWorkoutImportStatus(msg, false);
+        document.getElementById('workoutImportTextarea').value = '';
+      },
+      'Replace all workout plans?'
+    );
+  });
+
+  // ---------- GROCERY LIST ----------
+  function extractGroceryItems(){
+    const seen = new Set();
+    const items = [];
+    CATS.forEach(catKey=>{
+      (data.mealPlan[catKey] || []).forEach(id=>{
+        const item = getLibraryItem(id);
+        if(!item || !item.ingredients) return;
+        item.ingredients.split(',').forEach(part=>{
+          const clean = part.trim().replace(/\s+/g, ' ');
+          if(!clean) return;
+          const key = clean.toLowerCase();
+          if(!seen.has(key)){
+            seen.add(key);
+            items.push(clean);
+          }
+        });
+      });
+    });
+    return items;
+  }
+
+  function renderGroceryList(){
+    const container = document.getElementById('groceryList');
+    container.innerHTML = '';
+    const autoItems = extractGroceryItems();
+
+    autoItems.forEach(text=>{
+      container.appendChild(buildGroceryRow(text, false));
+    });
+
+    data.grocery.customItems.forEach((item, idx)=>{
+      container.appendChild(buildGroceryRow(item.text, true, idx));
+    });
+
+    if(!autoItems.length && !data.grocery.customItems.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.style.fontSize = '13px';
+      empty.textContent = 'No items yet — add meal options or type something below.';
+      container.appendChild(empty);
+    }
+  }
+
+  function buildGroceryRow(text, isCustom, customIdx){
+    const key = text.toLowerCase();
+    const row = document.createElement('div');
+    row.className = 'grocery-item' + (data.grocery.checkedItems[key] ? ' checked' : '');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!data.grocery.checkedItems[key];
+    cb.addEventListener('change', ()=>{
+      if(cb.checked) data.grocery.checkedItems[key] = true;
+      else delete data.grocery.checkedItems[key];
+      row.classList.toggle('checked', cb.checked);
+      save();
+    });
+    const span = document.createElement('span');
+    span.textContent = text;
+    row.appendChild(cb);
+    row.appendChild(span);
+    if(isCustom){
+      const del = document.createElement('button');
+      del.className = 'del-btn';
+      del.textContent = '×';
+      del.addEventListener('click', ()=>{
+        data.grocery.customItems.splice(customIdx,1);
+        save();
+        renderGroceryList();
+      });
+      row.appendChild(del);
+    }
+    return row;
+  }
+
+  document.getElementById('groceryAddBtn').addEventListener('click', ()=>{
+    const input = document.getElementById('groceryAddInput');
+    const val = input.value.trim();
+    if(!val) return;
+    data.grocery.customItems.push({text:val});
+    save();
+    input.value = '';
+    renderGroceryList();
+  });
+  document.getElementById('groceryAddInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') document.getElementById('groceryAddBtn').click();
+  });
+  document.getElementById('regenGroceryBtn').addEventListener('click', renderGroceryList);
+  document.getElementById('printMealBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('.tab[data-tab="meals"]').classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-meals').classList.add('active');
+    window.print();
+  });
+
+  // ---------- READING ----------
+  function renderReading(){
+    document.getElementById('bookTitle').value = data.book.title || '';
+    document.getElementById('bookAuthor').value = data.book.author || '';
+    document.getElementById('bookCurrentPage').value = data.book.currentPage || '';
+    document.getElementById('bookTotalPage').value = data.book.totalPage || '';
+    updateBookProgress();
+    renderReadingLog();
+  }
+
+  function updateBookProgress(){
+    const cur = parseInt(data.book.currentPage) || 0;
+    const total = parseInt(data.book.totalPage) || 0;
+    const pct = total > 0 ? Math.min(100, Math.round((cur/total)*100)) : 0;
+    document.getElementById('bookProgressBar').style.width = pct + '%';
+    document.getElementById('bookProgressLabel').textContent = cur + ' of ' + total + ' pages (' + pct + '%)';
+  }
+
+  ['bookTitle','bookAuthor','bookCurrentPage','bookTotalPage'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', (e)=>{
+      const map = {bookTitle:'title', bookAuthor:'author', bookCurrentPage:'currentPage', bookTotalPage:'totalPage'};
+      data.book[map[id]] = e.target.value;
+      save();
+      updateBookProgress();
+      if(id === 'bookTitle') schedulePublish();
+    });
+  });
+
+  function renderReadingLog(){
+    const list = document.getElementById('readingLogList');
+    list.innerHTML = '';
+    if(!data.readingLog.length){
+      const empty = document.createElement('div');
+      empty.className = 'sub';
+      empty.style.fontSize = '13px';
+      empty.style.padding = '6px 0';
+      empty.textContent = "No entries yet — log today's pages below.";
+      list.appendChild(empty);
+      return;
+    }
+    data.readingLog.slice().reverse().forEach(entry=>{
+      const row = document.createElement('div');
+      row.className = 'log-row';
+      row.innerHTML = '<span>Day ' + entry.day + (entry.note ? ' — ' + escapeHtml(entry.note) : '') + '</span><span class="ld">+' + entry.pages + 'p</span>';
+      list.appendChild(row);
+    });
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  document.getElementById('logAddBtn').addEventListener('click', ()=>{
+    const pagesVal = parseInt(document.getElementById('logPages').value);
+    if(!pagesVal || pagesVal <= 0) return;
+    const note = document.getElementById('logNote').value;
+    data.readingLog.push({day:data.currentDay, pages:pagesVal, note:note});
+    const cur = (parseInt(data.book.currentPage) || 0) + pagesVal;
+    data.book.currentPage = String(cur);
+    const d = dayData(data.currentDay);
+    d.checks.reading = true;
+    save();
+    document.querySelector('#checklistItems input[data-key="reading"]').checked = true;
+    document.getElementById('logPages').value = '';
+    document.getElementById('logNote').value = '';
+    renderReading();
+    renderStreak();
+    renderGrid();
+    schedulePublish();
+  });
+
+  // ---------- FRIENDS (Supabase-backed shared feed) ----------
+  const SUPABASE_URL = 'https://dlmhjuzdiifvohvmnbbm.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsbWhqdXpkaWlmdm9odm1uYmJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyNjQwOTUsImV4cCI6MjA5ODg0MDA5NX0.kTEiM0CS0_ZWz2PeSscxaw1URi_453FpkxdPZMyTx64';
+
+  let supabaseClient = null;
+  if(typeof supabase !== 'undefined' && supabase.createClient){
+    try{
+      supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e){ console.error('Supabase init failed:', e); }
+  }
+
+  function computeTotalDaysCompleted(){
+    let count = 0;
+    for(let n = 1; n <= TOTAL_DAYS; n++){
+      if(data.days[n] && isCoreDone(n)) count++;
+    }
+    return count;
+  }
+
+  function renderFriendProfileUI(){
+    const setupCard = document.getElementById('friendProfileSetupCard');
+    const activeCard = document.getElementById('friendProfileActiveCard');
+    if(data.friendProfile && data.friendProfile.name){
+      setupCard.style.display = 'none';
+      activeCard.style.display = '';
+      document.getElementById('friendActiveName').textContent = 'Publishing as ' + data.friendProfile.name;
+    } else {
+      setupCard.style.display = '';
+      activeCard.style.display = 'none';
+    }
+  }
+
+  function setSyncStatus(state, message){
+    const el = document.getElementById('friendSyncStatus');
+    if(!el) return;
+    el.innerHTML = '<span class="sync-dot ' + state + '"></span>' + message;
+    if(state !== 'error'){
+      el.style.cursor = '';
+      el.style.textDecoration = '';
+      el.onclick = null;
+    }
+  }
+
+  document.getElementById('friendSaveProfileBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('friendNameInput').value.trim();
+    const pin = document.getElementById('friendPinInput').value.trim();
+    const statusEl = document.getElementById('friendProfileStatus');
+    if(!name || !pin || pin.length < 4){
+      statusEl.textContent = 'Enter a name and a PIN of at least 4 digits.';
+      statusEl.className = 'error';
+      return;
+    }
+    data.friendProfile = { name, pin };
+    save();
+    renderFriendProfileUI();
+    statusEl.textContent = '';
+    publishFriendData();
+  });
+
+  document.getElementById('friendSwitchProfileBtn').addEventListener('click', ()=>{
+    showConfirm(
+      'This clears your saved name/PIN on this device. Your existing entry in the shared feed stays as-is until you publish again.',
+      ()=>{
+        data.friendProfile = null;
+        save();
+        renderFriendProfileUI();
+      },
+      'Switch profile?'
+    );
+  });
+
+  let publishDebounceTimer = null;
+  function schedulePublish(){
+    if(!data.friendProfile || !supabaseClient) return;
+    setSyncStatus('pending', 'Syncing…');
+    clearTimeout(publishDebounceTimer);
+    publishDebounceTimer = setTimeout(publishFriendData, 2500);
+  }
+
+  async function publishFriendData(){
+    if(!data.friendProfile) return;
+    if(!supabaseClient){
+      setSyncStatus('error', 'Sync failed — tap for details');
+      wireStatusDetail('The Supabase library never loaded — check your internet connection, then reload the page and try again.');
+      return;
+    }
+    const todayChecks = dayData(data.currentDay).checks;
+    let sharedPhotoData = null;
+    let sharedPhotoDayVal = null;
+    if(data.sharedPhotoDay && data.days[data.sharedPhotoDay] && data.days[data.sharedPhotoDay].photo){
+      sharedPhotoData = data.days[data.sharedPhotoDay].photo;
+      sharedPhotoDayVal = data.sharedPhotoDay;
+    }
+    try{
+      const { error } = await supabaseClient.rpc('upsert_friend_entry', {
+        p_name: data.friendProfile.name,
+        p_pin: data.friendProfile.pin,
+        p_streak: computeStreak(),
+        p_days_completed: computeTotalDaysCompleted(),
+        p_current_book: data.book.title || null,
+        p_workout_done_today: !!todayChecks.workout,
+        p_water_done_today: !!todayChecks.water,
+        p_shared_photo_data: sharedPhotoData,
+        p_shared_photo_day: sharedPhotoDayVal
+      });
+      if(error) throw error;
+      setSyncStatus('ok', 'Synced just now');
+    } catch(err){
+      const detail = (err && (err.message || err.error_description || err.hint || err.details))
+        || (typeof err === 'string' ? err : JSON.stringify(err));
+      setSyncStatus('error', 'Sync failed — tap for details');
+      wireStatusDetail(detail || 'Unknown error — no details returned.');
+      console.error('Friend sync error:', err);
+    }
+  }
+
+  function wireStatusDetail(detail){
+    const el = document.getElementById('friendSyncStatus');
+    el.style.cursor = 'pointer';
+    el.style.textDecoration = 'underline';
+    el.onclick = () => showNotice(detail, 'Sync error details');
+  }
+
+  async function loadFriendFeed(){
+    const listEl = document.getElementById('friendFeedList');
+    if(!listEl) return;
+    if(!supabaseClient){
+      listEl.innerHTML = '<div class="sub" style="font-size:13px;">Friends feature needs an internet connection to load.</div>';
+      return;
+    }
+    listEl.innerHTML = '<div class="sub" style="font-size:13px;">Loading…</div>';
+    try{
+      const { data: rows, error } = await supabaseClient
+        .from('friend_feed')
+        .select('*')
+        .order('streak', { ascending: false });
+      if(error) throw error;
+      if(!rows || !rows.length){
+        listEl.innerHTML = '<div class="sub" style="font-size:13px;">No one has published yet — be the first!</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      rows.forEach(row => listEl.appendChild(buildFriendCard(row)));
+    } catch(err){
+      listEl.innerHTML = '<div class="sub" style="font-size:13px;color:var(--red);">Could not load the feed. Check your connection and try refreshing.</div>';
+      console.error('Friend feed error:', err);
+    }
+  }
+
+  function buildFriendCard(row){
+    const card = document.createElement('div');
+    card.className = 'friend-card';
+    const updated = row.updated_at
+      ? new Date(row.updated_at).toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})
+      : '';
+    card.innerHTML =
+      '<div class="friend-card-top"><div class="friend-card-name">' + escapeHtml(row.name) + '</div><div class="friend-card-updated">' + updated + '</div></div>' +
+      '<div class="friend-stat-row">' +
+        '<div class="friend-stat-pill"><span class="fn">' + (row.streak || 0) + '</span> day streak</div>' +
+        '<div class="friend-stat-pill"><span class="fn">' + (row.days_completed || 0) + '</span> days done</div>' +
+      '</div>' +
+      '<div class="friend-badges">' +
+        '<span class="friend-badge' + (row.workout_done_today ? '' : ' pending') + '">' + (row.workout_done_today ? '✓ Workout' : 'Workout pending') + '</span>' +
+        '<span class="friend-badge' + (row.water_done_today ? '' : ' pending') + '">' + (row.water_done_today ? '✓ Water' : 'Water pending') + '</span>' +
+      '</div>' +
+      (row.current_book ? '<div class="friend-book">📖 Reading: ' + escapeHtml(row.current_book) + '</div>' : '');
+    if(row.shared_photo_data){
+      const img = document.createElement('img');
+      img.className = 'friend-photo';
+      img.src = row.shared_photo_data;
+      card.appendChild(img);
+    }
+    return card;
+  }
+
+  document.getElementById('friendRefreshBtn').addEventListener('click', loadFriendFeed);
+
+  renderDay();
+  renderAllMealCategories();
+  renderGroceryList();
+  renderWorkouts();
+  renderReading();
+  renderFriendProfileUI();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "75 Medium",
+  "short_name": "75 Medium",
+  "description": "Daily challenge tracker — workouts, meals, reading, progress photos, and a friends feed.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f7fb",
+  "theme_color": "#7c5cff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
