@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>75 Medium</title>
+
+<!-- Installability: iPhone home screen + desktop browsers (Chrome/Edge "Install app") -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7c5cff">
+
+<!-- iOS-specific: makes "Add to Home Screen" open full-screen with no browser chrome -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="75 Medium">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- Favicon for browser tabs / desktop bookmarks -->
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
   :root{
     --ink:#1a1a2e;
