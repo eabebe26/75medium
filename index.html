@@ -1579,7 +1579,7 @@
     return streak;
   }
 
-  // Streak-through-yesterday, used only for break detection so an in-progress "today"
+  // Streak-through-yesterday, used for break detection so an in-progress "today"
   // (not yet checked off) never gets mistaken for a missed day.
   function computeStreakThroughYesterday(){
     let streak = 0;
@@ -1588,6 +1588,14 @@
       else break;
     }
     return streak;
+  }
+
+  // The streak actually worth showing/publishing: if today is already done, the
+  // full inclusive count; if today is still in progress, the streak as of
+  // yesterday — NOT 0, since nothing has actually broken yet, today just isn't
+  // finished. This is what displays locally and what gets sent to the Friends feed.
+  function getEffectiveStreak(){
+    return isCoreDone(data.currentDay) ? computeStreak() : computeStreakThroughYesterday();
   }
 
   // Like true 75 Hard: archives the failed attempt (nothing is deleted) and restarts
@@ -1634,7 +1642,7 @@
   }
 
   function renderStreak(){
-    const streak = computeStreak();
+    const streak = getEffectiveStreak();
     document.getElementById('streakCounter').textContent = streak;
     const banner = document.getElementById('streakBanner');
 
@@ -2701,7 +2709,7 @@
         setSyncStatus('ok', 'Synced — last updated ' + updatedStr);
         showNotice(
           'Welcome back, ' + name + '. Your full tracker (Day ' + data.currentDay + ', ' +
-          computeStreak() + ' day streak, ' + computeTotalDaysCompleted() + ' days completed) has been restored on this device. ' +
+          getEffectiveStreak() + ' day streak, ' + computeTotalDaysCompleted() + ' days completed) has been restored on this device. ' +
           'Private photos from other devices won\'t appear here — only your shared photo (if any) carries over.',
           'Tracker restored'
         );
@@ -2805,7 +2813,7 @@
       const { error } = await supabaseClient.rpc('upsert_friend_entry', {
         p_name: data.friendProfile.name,
         p_pin: data.friendProfile.pin,
-        p_streak: computeStreak(),
+        p_streak: getEffectiveStreak(),
         p_days_completed: computeTotalDaysCompleted(),
         p_current_book: data.book.title || null,
         p_workout_done_today: !!todayChecks.workout,
