@@ -897,6 +897,10 @@
   </div>
 </header>
 
+<div id="updateBanner" style="display:none;background:#fdf6e3;color:#b8860b;padding:10px 16px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;">
+  ⟳ A newer version is available — tap here to update
+</div>
+
 <div class="container">
 
   <div class="tabs">
@@ -1236,6 +1240,7 @@
 <script>
 (function(){
   const STORAGE_KEY = '75medium_data';
+  const APP_VERSION = '2026-07-06-01';
   const TOTAL_DAYS = 75;
   const ITEMS = ['workout','water','diet','noalcohol','reading','progresspic'];
   const CORE_ITEMS = ['workout','water','diet','noalcohol','reading'];
@@ -2893,6 +2898,29 @@
   }
 
   document.getElementById('friendRefreshBtn').addEventListener('click', loadFriendFeed);
+
+  // ---------- UPDATE CHECK ----------
+  // Fetches version.json fresh (cache-busted) so it always reflects what's actually
+  // deployed, regardless of how aggressively the page itself got cached.
+  async function checkForUpdate(){
+    try{
+      const res = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if(!res.ok) return;
+      const remote = await res.json();
+      if(remote.version && remote.version !== APP_VERSION){
+        const banner = document.getElementById('updateBanner');
+        banner.style.display = 'block';
+        banner.onclick = () => {
+          // Cache-busted navigation — more reliable than a plain reload for forcing
+          // a genuine re-fetch instead of reusing a cached copy.
+          window.location.href = window.location.pathname + '?v=' + Date.now();
+        };
+      }
+    } catch(e){
+      // Offline or version.json missing — fail silently, not worth alarming over.
+    }
+  }
+  checkForUpdate();
 
   renderDay();
   renderAllMealCategories();
